@@ -22,7 +22,7 @@ public class UserEntity {
 	@Id
 	@GeneratedValue(generator = "user_entity_seq_generator")
 	private Long id;
-	@Column(unique = true)
+	@Column(unique = true, nullable = false)
 	private String userId;
 	private String userPwd;
 	private String email;

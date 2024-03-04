@@ -15,6 +15,7 @@ import com.hangulhunting.Korean_Hunting.entity.UserEntity;
 import com.hangulhunting.Korean_Hunting.repository.UserRepository;
 import com.hangulhunting.Korean_Hunting.service.UserService;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -31,21 +32,32 @@ public class BasicController {
 	}
 
 	@PostMapping("/signup")
+	@Transactional
 	public ResponseEntity<String> signup(@RequestBody User user) {
-		if(userService.userIdCheck(user.getUserId())) {
-			return new ResponseEntity<>("회원가입하려는 ID가 중복되었습니다.", HttpStatus.BAD_REQUEST);
+		try {
+			if(userService.existsByUserIdIsNullOrBlank(user.getUserId())) {
+				return new ResponseEntity<>("아이디는 필수 사항입니다.", HttpStatus.BAD_REQUEST);
+			}
+			
+			if(userService.userIdCheck(user.getUserId())) {
+				return new ResponseEntity<>("회원가입하려는 ID가 중복되었습니다.", HttpStatus.BAD_REQUEST);
+			}
+			
+			userRepository.save(createUserEntity(user));
+			return ResponseEntity.ok().body("회원 가입에 성공하였습니다.");
+		} catch (Exception e) {
+			return new ResponseEntity<>("회원 가입에 실패하였습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
-		
-		UserEntity userEntity = UserEntity.builder()
-										  .userId(user.getUserId())
-										  .userPwd(bCryptPasswordEncoder.encode(user.getUserPwd()))
-										  .email(user.getEmail())
-										  .company(user.getCompany())
-										  .role(UserRole.USER)
-										  .build();
-		
-		userRepository.save(userEntity);
-		return ResponseEntity.ok().body("회원 가입에 성공하였습니다.");
+	}
+	
+	private UserEntity createUserEntity(User user) {
+		return UserEntity.builder()
+						 .userId(user.getUserId())
+						 .userPwd(bCryptPasswordEncoder.encode(user.getUserPwd()))
+						 .email(user.getEmail())
+						 .company(user.getCompany())
+						 .role(UserRole.USER)
+						 .build();
 	}
 
 }

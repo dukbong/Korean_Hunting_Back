@@ -3,6 +3,7 @@ package com.hangulhunting.Korean_Hunting.controller;
 import java.util.Optional;
 
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,10 +28,10 @@ public class SignUpTest {
 	UserRepository userRepository;
 	
 	@Mock
-	UserService userService;
+	BCryptPasswordEncoder bCryptPasswordEncoder;
 	
 	@Mock
-	BCryptPasswordEncoder bCryptPasswordEncoder;
+	UserService userService;
 	
 	@InjectMocks
 	BasicController basicController;
@@ -66,6 +67,51 @@ public class SignUpTest {
     	
     	Mockito.verify(userService, Mockito.times(1)).userIdCheck("test1");
     	Mockito.verify(userRepository, Mockito.times(1)).save(Mockito.any(UserEntity.class));
+    }
+    
+    @Test
+    @DisplayName("아이디 빈문자열 o 저장 x")
+    void userIdEmptyStringTest() {
+    	User user = new User("", "1234", "test1@gmail.com", "iit");
+    	
+    	Mockito.when(userService.existsByUserIdIsNullOrBlank("")).thenReturn(true);
+    	
+    	ResponseEntity<String> result = basicController.signup(user);
+    	
+    	Assertions.assertThat(result.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    	Assertions.assertThat(result.getBody()).isEqualTo("아이디는 필수 사항입니다.");
+    	
+    	Mockito.verify(userService, Mockito.never()).userIdCheck(Mockito.any());
+    	Mockito.verify(userRepository, Mockito.never()).save(Mockito.any());
+    }
+    
+    @Test
+    @DisplayName("아이디 Null o 저장 x")
+    void userIdNullTest() {
+    	User user = new User(null, "1234", "test@gmail.com", "iit");
+    	
+    	Mockito.when(userService.existsByUserIdIsNullOrBlank(null)).thenReturn(true);
+    	
+    	ResponseEntity<String> result = basicController.signup(user);
+    	
+    	Assertions.assertThat(result.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    	Assertions.assertThat(result.getBody()).isEqualTo("아이디는 필수 사항입니다.");
+    	
+    	Mockito.verify(userService, Mockito.never()).userIdCheck(Mockito.any());
+    	Mockito.verify(userRepository, Mockito.never()).save(Mockito.any());
+    }
+    
+    @Test
+    @DisplayName("예외 발생 시 회원가입 실패")
+    void signupFailureTest() {
+    	User user = new User("test1", "1234", "test1@gmail.com", "iit");
+    	
+    	Mockito.when(userRepository.save(Mockito.any(UserEntity.class))).thenThrow(new RuntimeException());
+    	
+    	ResponseEntity<String> result = basicController.signup(user);
+    	
+    	Assertions.assertThat(result.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+    	Assertions.assertThat(result.getBody()).isEqualTo("회원 가입에 실패하였습니다.");
     }
     
 
