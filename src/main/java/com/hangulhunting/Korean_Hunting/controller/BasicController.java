@@ -9,10 +9,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.hangulhunting.Korean_Hunting.dto.PrincipalDetails;
 import com.hangulhunting.Korean_Hunting.dto.User;
 import com.hangulhunting.Korean_Hunting.dto.UserRole;
 import com.hangulhunting.Korean_Hunting.entity.UserEntity;
 import com.hangulhunting.Korean_Hunting.repository.UserRepository;
+import com.hangulhunting.Korean_Hunting.service.AcountService;
 import com.hangulhunting.Korean_Hunting.service.UserService;
 
 import jakarta.transaction.Transactional;
@@ -25,10 +27,17 @@ public class BasicController {
 	private final UserService userService;
 	private final UserRepository userRepository;
 	private final BCryptPasswordEncoder bCryptPasswordEncoder;
+	private final AcountService acountService;
 
 	@PostMapping("/login")
-	public void login(@RequestBody User user) {
+	public ResponseEntity<String> login(@RequestBody User user) {
+		PrincipalDetails detail = (PrincipalDetails) acountService.loadUserByUsername(user.getUserId());
+		Optional<UserEntity> entity = userRepository.findByUserId(detail.getUsername());
 		
+		// UserDetail 과 파라미터 비교
+		bCryptPasswordEncoder.encode(user.getUserPwd()).equals(detail.getPassword());
+		
+		return ResponseEntity.ok("[로그인 성공] ID : " + detail.getUsername() + ", PWD : " + detail.getPassword());
 	}
 
 	@PostMapping("/signup")

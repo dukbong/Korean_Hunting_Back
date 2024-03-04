@@ -17,8 +17,6 @@ import lombok.RequiredArgsConstructor;
 public class AcountService implements UserDetailsService{
 	
 	private final UserRepository userRepository;
-	private final BCryptPasswordEncoder bCryptPasswordEncoder;
-	
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

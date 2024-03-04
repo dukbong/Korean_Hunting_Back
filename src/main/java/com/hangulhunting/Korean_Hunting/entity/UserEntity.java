@@ -9,13 +9,14 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@SequenceGenerator(name = "user_entity_seq_generator", sequenceName = "user_entity_seq")
-@NoArgsConstructor
+@SequenceGenerator(name = "user_entity_seq_generator", sequenceName = "user_entity_seq", initialValue = 1, allocationSize = 50)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class UserEntity {
 	
