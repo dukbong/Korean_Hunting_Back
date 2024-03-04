@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class UserService {
 
@@ -23,7 +22,15 @@ public class UserService {
 
 
 	public boolean existsByUserIdIsNullOrBlank(String userId) {
-		if(userId == null || userId.isEmpty()) {
+		return existsAnyNullOrBlank(userId);
+	}
+	
+	public boolean existsByUserPwdIsNullOrBlank(String userPwd) {
+		return existsAnyNullOrBlank(userPwd);
+	}
+	
+	private boolean existsAnyNullOrBlank(String str) {
+		if(str == null || str.isEmpty()) {
 			return true;
 		}
 		return false;

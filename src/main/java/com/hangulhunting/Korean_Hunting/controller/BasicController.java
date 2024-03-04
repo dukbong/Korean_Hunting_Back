@@ -39,6 +39,10 @@ public class BasicController {
 				return new ResponseEntity<>("아이디는 필수 사항입니다.", HttpStatus.BAD_REQUEST);
 			}
 			
+			if(userService.existsByUserPwdIsNullOrBlank(user.getUserPwd())) {
+				return new ResponseEntity<>("비밀번호는 필수 사항입니다.", HttpStatus.BAD_REQUEST);
+			}
+			
 			if(userService.userIdCheck(user.getUserId())) {
 				return new ResponseEntity<>("회원가입하려는 ID가 중복되었습니다.", HttpStatus.BAD_REQUEST);
 			}

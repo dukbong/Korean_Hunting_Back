@@ -42,7 +42,7 @@ public class SignUpTest {
         // 중복된 사용자 ID를 가진 사용자 생성
     	User user = new User("test1", "1234", "test1@gmail.com", "iit");
     	
-        Mockito.when(userService.userIdCheck("test1")).thenReturn(true);
+        Mockito.when(userService.userIdCheck(user.getUserId())).thenReturn(true);
         
         ResponseEntity<String> result = basicController.signup(user);
 
@@ -58,7 +58,7 @@ public class SignUpTest {
     void userIdNotDuplicateAndSaveTest() {
     	User user = new User("test1", "1234", "test1@gmail.com", "iit");
     	
-    	Mockito.when(userService.userIdCheck("test1")).thenReturn(false);
+    	Mockito.when(userService.userIdCheck(user.getUserId())).thenReturn(false);
     	
     	ResponseEntity<String> result = basicController.signup(user);
     	
@@ -74,7 +74,7 @@ public class SignUpTest {
     void userIdEmptyStringTest() {
     	User user = new User("", "1234", "test1@gmail.com", "iit");
     	
-    	Mockito.when(userService.existsByUserIdIsNullOrBlank("")).thenReturn(true);
+    	Mockito.when(userService.existsByUserIdIsNullOrBlank(user.getUserId())).thenReturn(true);
     	
     	ResponseEntity<String> result = basicController.signup(user);
     	
@@ -90,7 +90,7 @@ public class SignUpTest {
     void userIdNullTest() {
     	User user = new User(null, "1234", "test@gmail.com", "iit");
     	
-    	Mockito.when(userService.existsByUserIdIsNullOrBlank(null)).thenReturn(true);
+    	Mockito.when(userService.existsByUserIdIsNullOrBlank(user.getUserId())).thenReturn(true);
     	
     	ResponseEntity<String> result = basicController.signup(user);
     	
@@ -112,6 +112,38 @@ public class SignUpTest {
     	
     	Assertions.assertThat(result.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
     	Assertions.assertThat(result.getBody()).isEqualTo("회원 가입에 실패하였습니다.");
+    }
+    
+    @Test
+    @DisplayName("비밀번호 null o 저장 x")
+    void userPwdNullTest() {
+    	User user = new User("test1", "", "test1@gmail.com", "iit");
+    	
+    	Mockito.when(userService.existsByUserPwdIsNullOrBlank(user.getUserPwd())).thenReturn(true);
+    	
+    	ResponseEntity<String> result = basicController.signup(user);
+    	
+    	Assertions.assertThat(result.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    	Assertions.assertThat(result.getBody()).isEqualTo("비밀번호는 필수 사항입니다.");
+    	
+    	Mockito.verify(userService, Mockito.never()).userIdCheck(Mockito.any());
+    	Mockito.verify(userRepository, Mockito.never()).save(Mockito.any());
+    }
+    
+    @Test
+    @DisplayName("비밀번호 빈문자열 o 저장 x")
+    void userPwdEmptyStringTest() {
+    	User user = new User("test1", null, "test1@gmail.com", "iit");
+    	
+    	Mockito.when(userService.existsByUserPwdIsNullOrBlank(user.getUserPwd())).thenReturn(true);
+    	
+    	ResponseEntity<String> result = basicController.signup(user);
+    	
+    	Assertions.assertThat(result.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    	Assertions.assertThat(result.getBody()).isEqualTo("비밀번호는 필수 사항입니다.");
+    	
+    	Mockito.verify(userService, Mockito.never()).userIdCheck(Mockito.any());
+    	Mockito.verify(userRepository, Mockito.never()).save(Mockito.any());
     }
     
 

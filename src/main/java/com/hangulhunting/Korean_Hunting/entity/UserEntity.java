@@ -24,6 +24,7 @@ public class UserEntity {
 	private Long id;
 	@Column(unique = true, nullable = false)
 	private String userId;
+	@Column(nullable = false)
 	private String userPwd;
 	private String email;
 	private String company;
