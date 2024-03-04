@@ -8,4 +8,6 @@ import com.hangulhunting.Korean_Hunting.entity.UserEntity;
 
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
 	public Optional<UserEntity> findByUserId(String userId);
+	
+	public boolean existsByuserId(String userId);
 }

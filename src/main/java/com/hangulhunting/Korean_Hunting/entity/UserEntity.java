@@ -1,7 +1,11 @@
 package com.hangulhunting.Korean_Hunting.entity;
 
+import com.hangulhunting.Korean_Hunting.dto.UserRole;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
@@ -23,15 +27,18 @@ public class UserEntity {
 	private String userPwd;
 	private String email;
 	private String company;
+	@Enumerated(EnumType.STRING)
+	private UserRole role;
 	
 	@Builder
-	public UserEntity(Long id, String userId, String userPwd, String email, String company) {
+	public UserEntity(Long id, String userId, String userPwd, String email, String company, UserRole role) {
 		super();
 		this.id = id;
 		this.userId = userId;
 		this.userPwd = userPwd;
 		this.email = email;
 		this.company = company;
+		this.role = role;
 	}
 	
 	
