@@ -28,7 +28,6 @@ public class SecurityConfig {
 		
 		http
 			.formLogin(auth -> auth.disable());
-//			.formLogin(auth -> auth.loginPage("/login").permitAll());
 		
 		http
 			.csrf(auth -> auth.disable());
