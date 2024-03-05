@@ -24,19 +24,15 @@ import lombok.RequiredArgsConstructor;
 public class BasicController {
 
 	private final UserService userService;
-	private final AuthenticationManager authenticationManager;
-
+	
 	@PostMapping("/login")
-	public ResponseEntity<String> login(@RequestBody User user) {
+	public ResponseEntity<UserResDto> login(@RequestBody User user) {
+		UserResDto result = null;
 		try {
-			Authentication authentication = authenticationManager
-					.authenticate(new UsernamePasswordAuthenticationToken(user.getUserId(), user.getUserPwd()));
-
-			UserDetails userDetails = (PrincipalDetails) authentication.getPrincipal();
-
-			return ResponseEntity.ok("로그인 성공 : " + userDetails.getUsername());
+			result = userService.loginProcess(user);
+			return ResponseEntity.ok().body(result);
 		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인 실패 : " + user.getUserId());
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new UserResDto("로그인 실패 : " + user.getUserId()));
 		}
 	}
 
