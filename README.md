@@ -7,4 +7,4 @@
 
 #### 2024/03/04
 - Login Controller 및 Test Code 작성
-- Test Code : 정상적인 로그인과 비정상적인 로그
+- [Test Code](https://github.com/dukbong/Korean_Hunting_Back/blob/main/src/test/java/com/hangulhunting/Korean_Hunting/controller/LoginTest.java) : 정상적인 로그인과 비정상적인 로그
