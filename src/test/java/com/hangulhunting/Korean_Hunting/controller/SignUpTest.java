@@ -44,7 +44,7 @@ public class SignUpTest {
 		
 		// when
 	    Throwable thrown = assertThrows(CustomException.class, () -> {
-	        basicController.signup(user);
+	        basicController.join(user);
 	    });
 		
 		// then
@@ -62,7 +62,7 @@ public class SignUpTest {
 		
 		// when
 		Throwable thrown = assertThrows(CustomException.class, () -> {
-			basicController.signup(user);
+			basicController.join(user);
 		});
 		
 		// then

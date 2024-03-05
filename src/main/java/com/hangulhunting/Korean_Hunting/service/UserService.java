@@ -53,8 +53,8 @@ public class UserService {
 		
 		UserEntity userEntity = UserEntity.builder()
 				  						  .userId(user.getUserId())
-				  						  .userPwd(user.getUserPwd())
-				  						  .email(bCryptPasswordEncoder.encode(user.getEmail()))
+				  						  .userPwd(bCryptPasswordEncoder.encode(user.getUserPwd()))
+				  						  .email(user.getEmail())
 				  						  .company(user.getCompany())
 				  						  .role(UserRole.ROLE_USER)
 				  						  .build();

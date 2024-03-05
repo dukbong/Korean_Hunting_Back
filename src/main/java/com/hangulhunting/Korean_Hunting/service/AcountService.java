@@ -1,7 +1,5 @@
 package com.hangulhunting.Korean_Hunting.service;
 
-import java.util.Optional;
-
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -21,11 +19,10 @@ public class AcountService implements UserDetailsService{
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		Optional<UserEntity> user = userRepository.findByUserId(username);
-		if(user.isPresent()) {
-			return null;
-		}
-		return new PrincipalDetails(user.get());
+		UserEntity user = userRepository.findByUserId(username)
+												  .orElseThrow(() -> new UsernameNotFoundException("아이디를 확인해주세요. : " + username));
+		
+		return new PrincipalDetails(user);
 	}
-
+	
 }
