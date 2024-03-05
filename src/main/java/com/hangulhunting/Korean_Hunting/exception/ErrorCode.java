@@ -19,7 +19,8 @@ public enum ErrorCode {
 	INVALID_EMAIL(HttpStatus.BAD_REQUEST, "유효하지 않은 이메일 형식입니다: %s"),
 
 	/* 404 NOT FOUND : Resource 를 찾을 수 없음 */
-	MEMBER_NOT_FOUND_BY_ID(HttpStatus.NOT_FOUND, "해당 멤버 ID가 없습니다: %s");
+	MEMBER_NOT_FOUND_BY_ID(HttpStatus.NOT_FOUND, "해당 멤버 ID가 없습니다: %s"),
+	MEMBER_NOT_FOUND_INFO(HttpStatus.NOT_FOUND, "해당 멤버 ID의 정보를 불러올 수 없습니다. : %s");
 
 	private final HttpStatus httpStatus;
 	private final String detail; // %s 가 포함된 detail
