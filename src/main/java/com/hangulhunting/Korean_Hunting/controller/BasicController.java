@@ -34,7 +34,6 @@ public class BasicController {
 	}
 
 	@PostMapping("/join")
-	@Transactional
 	public ResponseEntity<UserResDto> signup(@RequestBody User user) {
 		UserResDto result = userService.joinProcess(user);
 		return ResponseEntity.status(HttpStatus.CREATED).body(result);

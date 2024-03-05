@@ -23,14 +23,14 @@ public class UserService {
 	private final UserRepository userRepository;
 	private final BCryptPasswordEncoder bCryptPasswordEncoder; 
 	
-	private boolean existsAnyNullOrBlank(String str) {
+	public boolean existsAnyNullOrBlank(String str) {
 		if(str == null || str.isEmpty()) {
 			return true;
 		}
 		return false;
 	}
 
-	private boolean isValidEmail(String email) {
+	public boolean isValidEmail(String email) {
 	    String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
 	    Pattern pattern = Pattern.compile(emailRegex);
 	    Matcher matcher = pattern.matcher(email);
@@ -39,17 +39,17 @@ public class UserService {
 
 
 	public UserResDto joinProcess(User user) {
-		if(userRepository.existsByuserId(user.getUserId()))
+		if(userRepository.existsByUserId(user.getUserId()))
 			throw new CustomException(ErrorCode.NAME_ALREADY_EXISTS,user.getUserId());
 		
 		if(existsAnyNullOrBlank(user.getUserId()))
-			throw new CustomException(ErrorCode.MEMBER_IDS_IS_EMPTY_OR_NULL, "아이디는 Null이거나 빈문자이 될 수 없습니다.");
+			throw new CustomException(ErrorCode.MEMBER_IDS_IS_EMPTY_OR_NULL, user.getUserId());
 		
 		if(existsAnyNullOrBlank(user.getUserPwd()))
-			throw new CustomException(ErrorCode.MEMBER_PWD_IS_EMPTY_OR_NULL, "비밀번호는 Null이거나 빈문자이 될 수 없습니다.");
+			throw new CustomException(ErrorCode.MEMBER_PWD_IS_EMPTY_OR_NULL, user.getUserPwd());
 		
 		if(isValidEmail(user.getEmail()))
-			throw new CustomException(ErrorCode.INVALID_EMAIL, "이메일이 유효하지 않습니다.");
+			throw new CustomException(ErrorCode.INVALID_EMAIL, user.getEmail());
 		
 		UserEntity userEntity = UserEntity.builder()
 				  						  .userId(user.getUserId())
@@ -58,6 +58,7 @@ public class UserService {
 				  						  .company(user.getCompany())
 				  						  .role(UserRole.ROLE_USER)
 				  						  .build();
+		
 		userRepository.save(userEntity);
 		
 		return new UserResDto("회원가입에 성공하였습니다.");
