@@ -13,11 +13,13 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.hangulhunting.Korean_Hunting.jwt.TokenProvider;
+import com.hangulhunting.Korean_Hunting.jwt.filter.JwtFilter;
 import com.hangulhunting.Korean_Hunting.jwt.handler.JwtAccessDeniedHandler;
 import com.hangulhunting.Korean_Hunting.jwt.handler.JwtAuthenticationEntryPoint;
 import com.hangulhunting.Korean_Hunting.service.AcountService;
@@ -29,20 +31,19 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfig {
 	
-	private final AcountService acountService;
-	
+//	private final AcountService acountService;
 	private final TokenProvider tokenProvider;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
     
-    @Bean
-    public AuthenticationManager authenticationManager() {
-        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
-        authenticationProvider.setUserDetailsService(acountService);
-        authenticationProvider.setPasswordEncoder(new BCryptPasswordEncoder());
-
-        return new ProviderManager(Collections.singletonList(authenticationProvider));
-    }
+//    @Bean
+//    public AuthenticationManager authenticationManager() {
+//        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
+//        authenticationProvider.setUserDetailsService(acountService);
+//        authenticationProvider.setPasswordEncoder(new BCryptPasswordEncoder());
+//
+//        return new ProviderManager(Collections.singletonList(authenticationProvider));
+//    }
 	
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -59,7 +60,7 @@ public class SecurityConfig {
 			cors.configurationSource(corsConfigurationSource());
 		});
 		http.exceptionHandling(handling -> handling.authenticationEntryPoint(jwtAuthenticationEntryPoint).accessDeniedHandler(jwtAccessDeniedHandler));
-		http.apply(new JwtSecurityConfig(tokenProvider));
+	    http.addFilterBefore(new JwtFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class);
 		http.sessionManagement(config -> config.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
 		return http.build();
