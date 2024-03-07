@@ -7,21 +7,20 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.hangulhunting.Korean_Hunting.dto.PrincipalDetails;
+import com.hangulhunting.Korean_Hunting.dto.TokenDto;
 import com.hangulhunting.Korean_Hunting.dto.User;
 import com.hangulhunting.Korean_Hunting.dto.UserResDto;
 import com.hangulhunting.Korean_Hunting.dto.UserRole;
 import com.hangulhunting.Korean_Hunting.entity.UserEntity;
 import com.hangulhunting.Korean_Hunting.exception.CustomException;
 import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
+import com.hangulhunting.Korean_Hunting.jwt.TokenProvider;
 import com.hangulhunting.Korean_Hunting.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -31,8 +30,10 @@ import lombok.RequiredArgsConstructor;
 public class UserService {
 
 	private final UserRepository userRepository;
+	/* private final AuthenticationManager authenticationManager; */
+	private final AuthenticationManagerBuilder managerBuilder;
 	private final BCryptPasswordEncoder bCryptPasswordEncoder;
-	private final AuthenticationManager authenticationManager;
+	private final TokenProvider tokenProvider;
 
 	public boolean existsAnyNullOrBlank(String str) {
 		if (str == null || str.isEmpty()) {
@@ -70,14 +71,12 @@ public class UserService {
 		return new UserResDto("회원가입에 성공하였습니다.");
 	}
 
-	public UserResDto loginProcess(User user) {
-		Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUserId(), user.getUserPwd()));
-		
-		SecurityContextHolder.getContext().setAuthentication(authentication);
-		
-		UserDetails userDetails = (PrincipalDetails) authentication.getPrincipal();
+	public TokenDto loginProcess(User user) {
+		UsernamePasswordAuthenticationToken authenticationToken = user.toAuthentication();
 
-		return new UserResDto("로그인 성공 : " + userDetails.getUsername());
+        Authentication authentication = managerBuilder.getObject().authenticate(authenticationToken);
+
+        return tokenProvider.generateTokenDto(authentication);
 	}
 
 	public Map<String, String> userInfo(String userId) {

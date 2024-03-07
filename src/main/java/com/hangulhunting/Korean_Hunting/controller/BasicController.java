@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hangulhunting.Korean_Hunting.dto.PrincipalDetails;
+import com.hangulhunting.Korean_Hunting.dto.TokenDto;
 import com.hangulhunting.Korean_Hunting.dto.User;
 import com.hangulhunting.Korean_Hunting.dto.UserResDto;
 import com.hangulhunting.Korean_Hunting.service.UserService;
@@ -25,14 +26,8 @@ public class BasicController {
 	private final UserService userService;
 	
 	@PostMapping("/login")
-	public ResponseEntity<UserResDto> login(@RequestBody User user) {
-		UserResDto result = null;
-		try {
-			result = userService.loginProcess(user);
-			return ResponseEntity.ok().body(result);
-		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new UserResDto("로그인 실패 : " + user.getUserId()));
-		}
+	public ResponseEntity<TokenDto> login(@RequestBody User user) {
+		return ResponseEntity.ok().body(userService.loginProcess(user));
 	}
 
 	@PostMapping("/join")

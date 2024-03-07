@@ -1,5 +1,7 @@
 package com.hangulhunting.Korean_Hunting.dto;
 
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,4 +16,8 @@ public class User {
 	private String email;
 	private String company;
 	
+	
+	public UsernamePasswordAuthenticationToken toAuthentication() {
+        return new UsernamePasswordAuthenticationToken(userId, userPwd);
+    }
 }

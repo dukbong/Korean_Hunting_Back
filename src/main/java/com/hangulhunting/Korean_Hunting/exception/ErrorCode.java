@@ -17,6 +17,7 @@ public enum ErrorCode {
 	FILED_VALIDATION_FAILED(HttpStatus.BAD_REQUEST, "필드값이 유효하지 않습니다."),
 	INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "비밀번호가 일치하지 않습니다."),
 	INVALID_EMAIL(HttpStatus.BAD_REQUEST, "유효하지 않은 이메일 형식입니다: %s"),
+	NO_AUTHORITY(HttpStatus.UNAUTHORIZED, "권한이 없습니다."),
 
 	/* 404 NOT FOUND : Resource 를 찾을 수 없음 */
 	MEMBER_NOT_FOUND_BY_ID(HttpStatus.NOT_FOUND, "해당 멤버 ID가 없습니다: %s"),
