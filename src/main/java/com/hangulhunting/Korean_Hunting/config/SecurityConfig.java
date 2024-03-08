@@ -1,13 +1,9 @@
 package com.hangulhunting.Korean_Hunting.config;
 
 import java.util.Arrays;
-import java.util.Collections;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -22,7 +18,7 @@ import com.hangulhunting.Korean_Hunting.jwt.TokenProvider;
 import com.hangulhunting.Korean_Hunting.jwt.filter.JwtFilter;
 import com.hangulhunting.Korean_Hunting.jwt.handler.JwtAccessDeniedHandler;
 import com.hangulhunting.Korean_Hunting.jwt.handler.JwtAuthenticationEntryPoint;
-import com.hangulhunting.Korean_Hunting.service.AcountService;
+import com.hangulhunting.Korean_Hunting.repository.BlackListRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -35,6 +31,7 @@ public class SecurityConfig {
 	private final TokenProvider tokenProvider;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
+    private final BlackListRepository blackListRepository;
     
 //    @Bean
 //    public AuthenticationManager authenticationManager() {
@@ -50,8 +47,13 @@ public class SecurityConfig {
 		http.authorizeHttpRequests(auth -> auth.requestMatchers("/login").permitAll() // 로그인
 				.requestMatchers("/join").permitAll() // 회원가입
 				.requestMatchers("/admin/**").hasRole("ADMIN") // 관리자 페이지
+				.requestMatchers("/info/**").hasAnyRole("USER", "ADMIN") // 관리자 페이지
 				.anyRequest().authenticated());
 
+		http.logout(logout -> logout.disable());
+		
+		http.sessionManagement(config -> config.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+		
 		http.formLogin(auth -> auth.disable());
 
 		http.csrf(auth -> auth.disable());
@@ -59,9 +61,13 @@ public class SecurityConfig {
 		http.cors(cors -> {
 			cors.configurationSource(corsConfigurationSource());
 		});
-		http.exceptionHandling(handling -> handling.authenticationEntryPoint(jwtAuthenticationEntryPoint).accessDeniedHandler(jwtAccessDeniedHandler));
-	    http.addFilterBefore(new JwtFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class);
-		http.sessionManagement(config -> config.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+		
+		http.exceptionHandling(handling -> handling
+													.authenticationEntryPoint(jwtAuthenticationEntryPoint)
+													.accessDeniedHandler(jwtAccessDeniedHandler)
+		);
+		
+	    http.addFilterBefore(new JwtFilter(tokenProvider, blackListRepository), UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();
 	}

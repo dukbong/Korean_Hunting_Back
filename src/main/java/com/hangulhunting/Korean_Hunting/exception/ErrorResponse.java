@@ -22,10 +22,7 @@ public class ErrorResponse {
         this.errors = List.of(err);
     }
 
-    public static ErrorResponse fromErrorCodeToResponse(ErrorCode errorCode) {
-        return new ErrorResponse(
-                errorCode.name(),           // 이름 자체
-                errorCode.getDetail()       // 상세
-        );
+	public static ErrorResponse fromErrorCodeToResponse(ErrorCode errorCode) {
+        return new ErrorResponse(errorCode.name(), errorCode.getDetail());
     }
 }

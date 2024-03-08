@@ -9,4 +9,5 @@ public class TokenDto {
     private String grantType;
     private String accessToken;
     private long tokenExpiresIn;
+    private String refreshToken;
 }

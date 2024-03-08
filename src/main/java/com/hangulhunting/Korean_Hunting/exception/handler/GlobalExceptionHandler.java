@@ -22,9 +22,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CustomException.class)
     protected ResponseEntity<ErrorResponse> handleCustomException(CustomException e) {
-        ErrorCode errorCode = e.getErrorCode();
+//        ErrorCode errorCode = e.getErrorCode();
+        
         return ResponseEntity.status(e.getHttpStatus())
-                .body(ErrorResponse.fromErrorCodeToResponse(errorCode));
+                .body(new ErrorResponse(e.getMessage(), e.toString()));
     }
 
 }

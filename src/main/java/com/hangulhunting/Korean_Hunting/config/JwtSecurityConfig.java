@@ -7,6 +7,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import com.hangulhunting.Korean_Hunting.jwt.TokenProvider;
 import com.hangulhunting.Korean_Hunting.jwt.filter.JwtFilter;
+import com.hangulhunting.Korean_Hunting.repository.BlackListRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -14,10 +15,11 @@ import lombok.RequiredArgsConstructor;
 public class JwtSecurityConfig extends SecurityConfigurerAdapter<DefaultSecurityFilterChain, HttpSecurity> {
 	
     private final TokenProvider tokenProvider;
+    private final BlackListRepository blackListRepository;
     
     @Override
     public void configure(HttpSecurity http) {
-        JwtFilter customFilter = new JwtFilter(tokenProvider);
+        JwtFilter customFilter = new JwtFilter(tokenProvider, blackListRepository);
         http.addFilterBefore(customFilter, UsernamePasswordAuthenticationFilter.class);
     }
 }

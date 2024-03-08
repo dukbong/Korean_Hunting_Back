@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import com.hangulhunting.Korean_Hunting.dto.TokenDto;
+import com.hangulhunting.Korean_Hunting.dto.TokenETC;
 import com.hangulhunting.Korean_Hunting.exception.CustomException;
 import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
 
@@ -34,9 +35,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TokenProvider {
 
-	private static final String AUTHORITIES_KEY = "auth";
-	private static final String BEARER_TYPE = "bearer";
-	private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 *30;
+//	private static final String AUTHORITIES_KEY = "auth";
+//	private static final String BEARER_TYPE = "Bearer";
+//	private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 *30;
+//	private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 24 * 7;  // 7일
 	private final Key key;
 	
 	public TokenProvider(@Value("${jwt.secret}") String secretKey) {
@@ -51,19 +53,25 @@ public class TokenProvider {
 										   .collect(Collectors.joining(","));
 		long now = (new Date()).getTime();
 		
-		Date tokenExpiresIn = new Date(now + ACCESS_TOKEN_EXPIRE_TIME);
-		
+		Date tokenExpiresIn = new Date(now + TokenETC.ACCESS_TOKEN_EXPIRE_TIME);
+		log.info("authorities = {}", authorities);
 		String accessToken = Jwts.builder()
 								 .setSubject(authentication.getName())
-								 .claim(AUTHORITIES_KEY, authorities)
+								 .claim(TokenETC.AUTHORITIES_KEY, authorities)
 								 .setExpiration(tokenExpiresIn)
 								 .signWith(key, SignatureAlgorithm.HS512)
 								 .compact();
 		
+		String refreshToken = Jwts.builder()
+				                  .setExpiration(new Date(now + TokenETC.REFRESH_TOKEN_EXPIRE_TIME))
+				                  .signWith(key, SignatureAlgorithm.HS512)
+				                  .compact();
+		
 		return TokenDto.builder()
-					   .grantType(BEARER_TYPE)
+					   .grantType(TokenETC.BEARER_TYPE)
 					   .accessToken(accessToken)
 					   .tokenExpiresIn(tokenExpiresIn.getTime())
+					   .refreshToken(refreshToken)
 					   .build();
 	}
 	
@@ -71,12 +79,12 @@ public class TokenProvider {
 	public Authentication getAuthentication(String accessToken) {
 		Claims claims = parseClaims(accessToken);
 		
-		if(claims.get(AUTHORITIES_KEY) == null) {
+		if(claims.get(TokenETC.AUTHORITIES_KEY) == null) {
 			throw new CustomException(ErrorCode.NO_AUTHORITY);
 		}
 		
 		Collection<? extends GrantedAuthority> authorities = 
-				Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
+				Arrays.stream(claims.get(TokenETC.AUTHORITIES_KEY).toString().split(","))
 				      .map(SimpleGrantedAuthority::new)
 				      .collect(Collectors.toList());
 		
