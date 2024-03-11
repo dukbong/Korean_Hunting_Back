@@ -63,6 +63,7 @@ public class TokenProvider {
 		long now = (new Date()).getTime();
 		
 		Date tokenExpiresIn = new Date(now + TokenETC.ACCESS_TOKEN_EXPIRE_TIME);
+		log.info("권한 -= {}", authorities);
 		String accessToken = Jwts.builder()
 								 .setSubject(authentication.getName())
 								 .claim(TokenETC.AUTHORITIES_KEY, authorities)
