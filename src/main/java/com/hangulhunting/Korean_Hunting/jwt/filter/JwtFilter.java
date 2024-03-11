@@ -11,7 +11,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.hangulhunting.Korean_Hunting.dto.TokenDto;
 import com.hangulhunting.Korean_Hunting.dto.TokenETC;
-import com.hangulhunting.Korean_Hunting.entity.RefreshToken;
+import com.hangulhunting.Korean_Hunting.entity.UserEntity;
 import com.hangulhunting.Korean_Hunting.jwt.TokenProvider;
 import com.hangulhunting.Korean_Hunting.repository.BlackListRepository;
 import com.hangulhunting.Korean_Hunting.repository.RefreshTokenRepository;
@@ -21,6 +21,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,13 +43,16 @@ public class JwtFilter extends OncePerRequestFilter {
 		return null;
 	}
 
+	@Transactional
 	private String resolveRefreshToken(HttpServletRequest request) {
 		String token = resolveToken(request);
 		String username = tokenProvider.getAuthentication(token).getName();
-		Optional<RefreshToken> refreshToken = refreshTokenRepository
-				.findByUserEntityId(userRepository.findByUserId(username).get().getId());
-		if (refreshToken.isPresent()) {
-			return refreshToken.get().getValue();
+//		Optional<RefreshToken> refreshToken = refreshTokenRepository
+//				.findByUserEntityId(userRepository.findByUserId(username).get().getId());
+		Optional<UserEntity> userEntity = userRepository.findByUserId(username);
+		if (userEntity.isPresent()) {
+//			return refreshToken.get().getValue();
+			return userEntity.get().getRefreshToken().getValue();
 		}
 		return null;
 	}
