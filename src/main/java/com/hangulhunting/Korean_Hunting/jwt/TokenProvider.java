@@ -20,6 +20,7 @@ import com.hangulhunting.Korean_Hunting.dto.TokenDto;
 import com.hangulhunting.Korean_Hunting.dto.TokenETC;
 import com.hangulhunting.Korean_Hunting.entity.BlackList;
 import com.hangulhunting.Korean_Hunting.entity.RefreshToken;
+import com.hangulhunting.Korean_Hunting.entity.UserEntity;
 import com.hangulhunting.Korean_Hunting.exception.CustomException;
 import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
 import com.hangulhunting.Korean_Hunting.repository.BlackListRepository;
@@ -35,6 +36,7 @@ import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SecurityException;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 
 @Component
@@ -63,7 +65,6 @@ public class TokenProvider {
 		long now = (new Date()).getTime();
 		
 		Date tokenExpiresIn = new Date(now + TokenETC.ACCESS_TOKEN_EXPIRE_TIME);
-		log.info("권한 -= {}", authorities);
 		String accessToken = Jwts.builder()
 								 .setSubject(authentication.getName())
 								 .claim(TokenETC.AUTHORITIES_KEY, authorities)
@@ -71,17 +72,10 @@ public class TokenProvider {
 								 .signWith(key, SignatureAlgorithm.HS512)
 								 .compact();
 
-		Optional<RefreshToken> checkToken = refreshTokenRepository.findByUserEntityId(userRepository.findByUserId(authentication.getName()).get().getId());
-		String refreshToken = null;
-		if(!checkToken.isPresent()) {
-			// 로그인시 refreshToken이 없기 때문에 만들고
-			// 재 발급의 경우 refreshToken을 만드는 일을 없앤다.
-			refreshToken = Jwts.builder()
-							   .setExpiration(new Date(now + TokenETC.REFRESH_TOKEN_EXPIRE_TIME))
-							   .signWith(key, SignatureAlgorithm.HS512)
-							   .compact();
-		}
-		
+		String refreshToken = Jwts.builder()
+								  .setExpiration(new Date(now + TokenETC.REFRESH_TOKEN_EXPIRE_TIME))
+								  .signWith(key, SignatureAlgorithm.HS512)
+								  .compact();
 		
 		return TokenDto.builder()
 					   .grantType(TokenETC.BEARER_TYPE)
@@ -126,7 +120,6 @@ public class TokenProvider {
     		log.error("{}", "잘못된 JWT 서명입니다.");
     	} catch (ExpiredJwtException e) {
     		log.error("{}", "만료된 JWT 토큰입니다.");
-    		// 만료된 토큰은 즉시 blackList에 넣는다.
     		BlackList blackList = BlackList.builder().token(token).build();
     		blackListRepository.save(blackList);
     	} catch (UnsupportedJwtException e) {
@@ -136,4 +129,27 @@ public class TokenProvider {
     	}
     	return false;
     }
+
+    @Transactional
+	public TokenDto refreshGenerateTokenDto(String refreshToken) {
+		Optional<RefreshToken>tokenInfo = refreshTokenRepository.findByValue(refreshToken);
+		if(tokenInfo.isPresent()) {
+			UserEntity userEntity = tokenInfo.get().getUserEntity();
+			long now = (new Date()).getTime();
+			Date tokenExpiresIn = new Date(now + TokenETC.ACCESS_TOKEN_EXPIRE_TIME);
+			String accessToken = Jwts.builder()
+									 .setSubject(userEntity.getUserId())
+									 .claim(TokenETC.AUTHORITIES_KEY, userEntity.getRole())
+									 .setExpiration(tokenExpiresIn)
+									 .signWith(key, SignatureAlgorithm.HS512)
+									 .compact();
+			
+			return TokenDto.builder()
+						   .accessToken(accessToken)
+						   .refreshToken(refreshToken)
+						   .tokenExpiresIn(tokenExpiresIn.getTime())
+						   .build();
+		}
+		return null;
+	}
 }

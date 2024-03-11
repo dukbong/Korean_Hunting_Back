@@ -9,4 +9,5 @@ import com.hangulhunting.Korean_Hunting.entity.RefreshToken;
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
 	void deleteByValue(String refreshToken);
 	Optional<RefreshToken> findByUserEntityId(Long userId);
+	Optional<RefreshToken> findByValue(String refreshToken);
 }

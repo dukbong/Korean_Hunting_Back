@@ -63,10 +63,10 @@ public class SecurityConfig {
 			cors.configurationSource(corsConfigurationSource());
 		});
 		
-		http.exceptionHandling(handling -> handling
-													.authenticationEntryPoint(jwtAuthenticationEntryPoint)
-													.accessDeniedHandler(jwtAccessDeniedHandler)
-		);
+//		http.exceptionHandling(handling -> handling
+//													.authenticationEntryPoint(jwtAuthenticationEntryPoint)
+//													.accessDeniedHandler(jwtAccessDeniedHandler)
+//		);
 		
 	    http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
