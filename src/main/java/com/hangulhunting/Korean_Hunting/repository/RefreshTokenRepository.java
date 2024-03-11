@@ -7,5 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.hangulhunting.Korean_Hunting.entity.RefreshToken;
 
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
-    Optional<RefreshToken> findByKey(String key);
+	void deleteByValue(String refreshToken);
+	Optional<RefreshToken> findByUserEntityId(Long userId);
 }

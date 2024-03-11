@@ -1,13 +1,17 @@
 package com.hangulhunting.Korean_Hunting.entity;
 
 import com.hangulhunting.Korean_Hunting.dto.UserRole;
+import com.hangulhunting.Korean_Hunting.jwt.filter.JwtFilter;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.SequenceGenerator;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -31,6 +35,9 @@ public class UserEntity {
 	private String company;
 	@Enumerated(EnumType.STRING)
 	private UserRole role;
+	
+	@OneToOne(fetch = FetchType.LAZY, mappedBy = "userEntity")
+	private RefreshToken refreshToken;
 	
 	@Builder
 	public UserEntity(Long id, String userId, String userPwd, String email, String company, UserRole role) {

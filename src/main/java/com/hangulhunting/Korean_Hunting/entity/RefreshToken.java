@@ -2,8 +2,11 @@ package com.hangulhunting.Korean_Hunting.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.Builder;
@@ -21,16 +24,17 @@ public class RefreshToken {
     @GeneratedValue(generator = "refresh_seq_gen")
     private Long id;
     
-    @Column(name = "rt_key")
-    private String key;
-
     @Column(name = "rt_value")
     private String value;
+    
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "userId")
+    UserEntity userEntity;
 
     @Builder
-    public RefreshToken(String key, String value) {
-        this.key = key;
+    public RefreshToken(String value, UserEntity userEntity) {
         this.value = value;
+        this.userEntity = userEntity;
     }
 
     public RefreshToken updateValue(String token) {

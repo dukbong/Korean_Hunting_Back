@@ -1,5 +1,6 @@
 package com.hangulhunting.Korean_Hunting.service;
 
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,6 +27,7 @@ import com.hangulhunting.Korean_Hunting.repository.RefreshTokenRepository;
 import com.hangulhunting.Korean_Hunting.repository.UserRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,6 +43,7 @@ public class UserService {
 	private final AuthenticationManagerBuilder authenticationManagerBuilder;
 	private final BCryptPasswordEncoder bCryptPasswordEncoder;
 	private final TokenProvider tokenProvider;
+	
 
 	public boolean existsAnyNullOrBlank(String str) {
 		if (str == null || str.isEmpty()) {
@@ -83,47 +86,19 @@ public class UserService {
 		UsernamePasswordAuthenticationToken authenticationToken = user.toAuthentication();
 		// 2. 실제 검증 (비밀번호 체크)
 		// authenticate 멧드가 실행시 CustomUserDetailsService에서 만들었던 loadUserByUsername 실행
-		log.info("Login Porcess 진행중 .. ");
 		Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
 		// 3. 인증 정보를 기반으로 jwt 생성
 		TokenDto tokenDto = tokenProvider.generateTokenDto(authentication);
 		// 4. refresh 토큰 저장
+		UserEntity loginUser = userRepository.findByUserId(authentication.getName()).get();
 		RefreshToken refreshToken = RefreshToken.builder()
-				                                .key(authentication.getName())
 				 								.value(tokenDto.getRefreshToken())
+				 								.userEntity(loginUser)
 				 								.build();
-		 
 		refreshTokenRepository.save(refreshToken);
 		return tokenDto;
 	}
 
-	/*
-	 * public TokenDto reissue(TokenRequestDto tokenRequestDto) { // 1. Refresh
-	 * Token 검증 if (!tokenProvider.validateToken(tokenRequestDto.getRefreshToken()))
-	 * { throw new RuntimeException("Refresh Token 이 유효하지 않습니다."); }
-	 * 
-	 * // 2. Access Token 에서 Member ID 가져오기 Authentication authentication =
-	 * tokenProvider.getAuthentication(tokenRequestDto.getAccessToken());
-	 * 
-	 * // 3. 저장소에서 Member ID 를 기반으로 Refresh Token 값 가져옴 RefreshToken refreshToken =
-	 * refreshTokenRepository.findByKey(authentication.getName()) .orElseThrow(() ->
-	 * new RuntimeException("로그아웃 된 사용자입니다."));
-	 * 
-	 * // 4. Refresh Token 일치하는지 검사 if
-	 * (!refreshToken.getValue().equals(tokenRequestDto.getRefreshToken())) { throw
-	 * new RuntimeException("토큰의 유저 정보가 일치하지 않습니다."); }
-	 * 
-	 * // 5. 새로운 토큰 생성 TokenDto tokenDto =
-	 * tokenProvider.generateTokenDto(authentication);
-	 * 
-	 * // 6. 저장소 정보 업데이트 RefreshToken newRefreshToken =
-	 * refreshToken.updateValue(tokenDto.getRefreshToken());
-	 * refreshTokenRepository.save(newRefreshToken);
-	 * 
-	 * // 토큰 발급 return tokenDto; }
-	 */
-	
-	
 	public User userInfo() {
 		Authentication  authentication = SecurityContextHolder.getContext().getAuthentication();
 		String userId = authentication.getName();
@@ -132,12 +107,19 @@ public class UserService {
 		return user;
 	}
 
+	@Transactional
 	public void logoutProcess(HttpServletRequest request) {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		String token = request.getHeader(TokenETC.AUTHORIZATION);
-//		String token = (String)authentication.getCredentials();
 		log.info("logout user token  = {}", token);
 		BlackList blackList = BlackList.builder().token(token.substring(7)).build();
 		blackListRepository.save(blackList);
+		
+		// 로그아웃시 refresh Token 삭제
+		String username = authentication.getName();
+		Optional<RefreshToken> refreshToken = refreshTokenRepository.findByUserEntityId(userRepository.findByUserId(username).get().getId());
+		if(refreshToken.isPresent()) {
+			refreshTokenRepository.deleteByValue(refreshToken.get().getValue());
+		}
 	}
 }
