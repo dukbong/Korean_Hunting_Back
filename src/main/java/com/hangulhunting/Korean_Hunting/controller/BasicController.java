@@ -40,7 +40,6 @@ public class BasicController {
 	
 	@GetMapping("/logout")
 	public void logout(HttpServletRequest request) {
-		log.info("logout!!!!");
 		userService.logoutProcess(request);
 	}
 

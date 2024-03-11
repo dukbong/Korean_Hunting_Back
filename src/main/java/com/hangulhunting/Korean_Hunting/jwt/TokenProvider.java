@@ -71,14 +71,16 @@ public class TokenProvider {
 								 .compact();
 
 		Optional<RefreshToken> checkToken = refreshTokenRepository.findByUserEntityId(userRepository.findByUserId(authentication.getName()).get().getId());
-		if(checkToken.isPresent()) {
-			
+		String refreshToken = null;
+		if(!checkToken.isPresent()) {
+			// 로그인시 refreshToken이 없기 때문에 만들고
+			// 재 발급의 경우 refreshToken을 만드는 일을 없앤다.
+			refreshToken = Jwts.builder()
+							   .setExpiration(new Date(now + TokenETC.REFRESH_TOKEN_EXPIRE_TIME))
+							   .signWith(key, SignatureAlgorithm.HS512)
+							   .compact();
 		}
 		
-		String refreshToken = Jwts.builder()
-				                  .setExpiration(new Date(now + TokenETC.REFRESH_TOKEN_EXPIRE_TIME))
-				                  .signWith(key, SignatureAlgorithm.HS512)
-				                  .compact();
 		
 		return TokenDto.builder()
 					   .grantType(TokenETC.BEARER_TYPE)
