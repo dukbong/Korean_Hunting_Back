@@ -28,10 +28,11 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
 	
 //	private final AcountService acountService;
-	private final TokenProvider tokenProvider;
+//	private final TokenProvider tokenProvider;
+	private final JwtFilter jwtFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
-    private final BlackListRepository blackListRepository;
+//    private final BlackListRepository blackListRepository;
     
 //    @Bean
 //    public AuthenticationManager authenticationManager() {
@@ -67,7 +68,7 @@ public class SecurityConfig {
 													.accessDeniedHandler(jwtAccessDeniedHandler)
 		);
 		
-	    http.addFilterBefore(new JwtFilter(tokenProvider, blackListRepository), UsernamePasswordAuthenticationFilter.class);
+	    http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();
 	}

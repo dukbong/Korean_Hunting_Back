@@ -4,10 +4,10 @@ import java.io.IOException;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
 import com.hangulhunting.Korean_Hunting.jwt.TokenProvider;
 import com.hangulhunting.Korean_Hunting.repository.BlackListRepository;
 
@@ -18,6 +18,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@Component
 @RequiredArgsConstructor
 @Slf4j
 public class JwtFilter extends OncePerRequestFilter {
