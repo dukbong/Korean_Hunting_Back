@@ -14,21 +14,21 @@ import com.hangulhunting.Korean_Hunting.dto.TokenETC;
 import com.hangulhunting.Korean_Hunting.entity.UserEntity;
 import com.hangulhunting.Korean_Hunting.jwt.TokenProvider;
 import com.hangulhunting.Korean_Hunting.service.BlackListService;
+import com.hangulhunting.Korean_Hunting.service.UserService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
-@Slf4j
 public class JwtFilter extends OncePerRequestFilter {
 
 	private final TokenProvider tokenProvider;
 	private final BlackListService blackListService;
+	private final UserService userService;
 
 	private String resolveToken(HttpServletRequest request) {
 		String bearerToken = request.getHeader(TokenETC.AUTHORIZATION);
@@ -40,7 +40,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
 	private String resolveRefreshToken(String token) {
 		String username = tokenProvider.getAuthentication(token).getName();
-		Optional<UserEntity> userEntity = tokenProvider.findUserInfo(username);
+		Optional<UserEntity> userEntity = userService.findUserInfo(username);
 		if (userEntity.isPresent()) {
 			return userEntity.get().getRefreshToken().getValue();
 		}

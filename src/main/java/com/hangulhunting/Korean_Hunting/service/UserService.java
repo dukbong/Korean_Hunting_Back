@@ -125,4 +125,8 @@ public class UserService {
 			refreshTokenRepository.deleteByValue(refreshToken.get().getValue());
 		}
 	}
+
+	public Optional<UserEntity> findUserInfo(String username) {
+		return userRepository.findByUserId(username);
+	}
 }
