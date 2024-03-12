@@ -22,8 +22,10 @@ import com.hangulhunting.Korean_Hunting.entity.RefreshToken;
 import com.hangulhunting.Korean_Hunting.entity.UserEntity;
 import com.hangulhunting.Korean_Hunting.exception.CustomException;
 import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
+import com.hangulhunting.Korean_Hunting.repository.UserRepository;
 import com.hangulhunting.Korean_Hunting.service.BlackListService;
 import com.hangulhunting.Korean_Hunting.service.RefreshTokenService;
+import com.hangulhunting.Korean_Hunting.service.UserService;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -44,11 +46,13 @@ public class TokenProvider {
 	private final Key key;
 	private final BlackListService blackListService;
 	private final RefreshTokenService refreshTokenService;
+	private final UserRepository userRepository;
 	
-	public TokenProvider(@Value("${jwt.secret}") String secretKey, BlackListService blackListService, RefreshTokenService refreshTokenService) {
+	public TokenProvider(@Value("${jwt.secret}") String secretKey, BlackListService blackListService,UserRepository userRepository, RefreshTokenService refreshTokenService) {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
         
+        this.userRepository = userRepository;
         this.blackListService = blackListService;
         this.refreshTokenService = refreshTokenService;
     }
@@ -161,4 +165,6 @@ public class TokenProvider {
 		}
 		return null;
 	}
+
+
 }

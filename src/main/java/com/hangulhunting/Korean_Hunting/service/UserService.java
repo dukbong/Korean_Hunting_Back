@@ -4,9 +4,6 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
@@ -19,14 +16,11 @@ import com.hangulhunting.Korean_Hunting.dto.TokenETC;
 import com.hangulhunting.Korean_Hunting.dto.User;
 import com.hangulhunting.Korean_Hunting.dto.UserResDto;
 import com.hangulhunting.Korean_Hunting.dto.UserRole;
-import com.hangulhunting.Korean_Hunting.entity.BlackList;
 import com.hangulhunting.Korean_Hunting.entity.RefreshToken;
 import com.hangulhunting.Korean_Hunting.entity.UserEntity;
 import com.hangulhunting.Korean_Hunting.exception.CustomException;
 import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
 import com.hangulhunting.Korean_Hunting.jwt.TokenProvider;
-import com.hangulhunting.Korean_Hunting.repository.BlackListRepository;
-import com.hangulhunting.Korean_Hunting.repository.RefreshTokenRepository;
 import com.hangulhunting.Korean_Hunting.repository.UserRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,9 +34,8 @@ import lombok.extern.slf4j.Slf4j;
 public class UserService {
 
 	private final UserRepository userRepository;
-	private final RefreshTokenRepository refreshTokenRepository;
-	private final BlackListRepository blackListRepository;
-	/* private final AuthenticationManager authenticationManager; */
+	private final RefreshTokenService refreshTokenService;
+	private final BlackListService blackListService;
 	private final AuthenticationManagerBuilder authenticationManagerBuilder;
 	private final BCryptPasswordEncoder bCryptPasswordEncoder;
 	private final TokenProvider tokenProvider;
@@ -98,7 +91,7 @@ public class UserService {
 				 								.value(tokenDto.getRefreshToken())
 				 								.userEntity(loginUser)
 				 								.build();
-		refreshTokenRepository.save(refreshToken);
+		refreshTokenService.save(refreshToken);
 		return tokenDto;
 	}
 
@@ -115,18 +108,14 @@ public class UserService {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		String token = request.getHeader(TokenETC.AUTHORIZATION);
 		log.info("logout user token  = {}", token);
-		BlackList blackList = BlackList.builder().token(token.substring(7)).build();
-		blackListRepository.save(blackList);
+		blackListService.save(token.substring(7));
 		
 		// 로그아웃시 refresh Token 삭제
 		String username = authentication.getName();
-		Optional<RefreshToken> refreshToken = refreshTokenRepository.findByUserEntityId(userRepository.findByUserId(username).get().getId());
-		if(refreshToken.isPresent()) {
-			refreshTokenRepository.deleteByValue(refreshToken.get().getValue());
+		Optional<UserEntity> userEntity = userRepository.findByUserId(username);
+		if(userEntity.isPresent()) {
+			refreshTokenService.deleteByValue(userEntity.get().getRefreshToken().getValue());
 		}
 	}
 
-	public Optional<UserEntity> findUserInfo(String username) {
-		return userRepository.findByUserId(username);
-	}
 }

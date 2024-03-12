@@ -11,10 +11,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.hangulhunting.Korean_Hunting.dto.TokenDto;
 import com.hangulhunting.Korean_Hunting.dto.TokenETC;
-import com.hangulhunting.Korean_Hunting.entity.UserEntity;
+import com.hangulhunting.Korean_Hunting.entity.RefreshToken;
 import com.hangulhunting.Korean_Hunting.jwt.TokenProvider;
 import com.hangulhunting.Korean_Hunting.service.BlackListService;
-import com.hangulhunting.Korean_Hunting.service.UserService;
+import com.hangulhunting.Korean_Hunting.service.RefreshTokenService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -28,7 +28,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
 	private final TokenProvider tokenProvider;
 	private final BlackListService blackListService;
-	private final UserService userService;
+	private final RefreshTokenService refreshTokenService;
 
 	private String resolveToken(HttpServletRequest request) {
 		String bearerToken = request.getHeader(TokenETC.AUTHORIZATION);
@@ -40,9 +40,9 @@ public class JwtFilter extends OncePerRequestFilter {
 
 	private String resolveRefreshToken(String token) {
 		String username = tokenProvider.getAuthentication(token).getName();
-		Optional<UserEntity> userEntity = userService.findUserInfo(username);
-		if (userEntity.isPresent()) {
-			return userEntity.get().getRefreshToken().getValue();
+		Optional<RefreshToken> refreshToken = refreshTokenService.findByUserId(username);
+		if (refreshToken.isPresent()) {
+			return refreshToken.get().getValue();
 		}
 		return null;
 	}

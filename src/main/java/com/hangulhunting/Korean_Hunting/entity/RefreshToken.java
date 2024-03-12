@@ -28,7 +28,7 @@ public class RefreshToken {
     private String value;
     
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "userId")
+    @JoinColumn(name = "user_Id")
     UserEntity userEntity;
 
     @Builder
