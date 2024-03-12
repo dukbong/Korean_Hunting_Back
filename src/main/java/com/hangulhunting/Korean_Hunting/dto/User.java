@@ -7,6 +7,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+
+/***
+ * 로그인 시 사용할 DTO 
+ */
 @NoArgsConstructor
 @Getter
 public class User {

@@ -9,8 +9,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
-import com.hangulhunting.Korean_Hunting.dto.TokenETC;
 import com.hangulhunting.Korean_Hunting.jwt.TokenProvider;
+import com.hangulhunting.Korean_Hunting.jwt.etc.TokenETC;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

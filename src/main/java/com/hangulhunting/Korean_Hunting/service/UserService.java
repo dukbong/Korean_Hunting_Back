@@ -12,15 +12,15 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.hangulhunting.Korean_Hunting.dto.TokenDto;
-import com.hangulhunting.Korean_Hunting.dto.TokenETC;
 import com.hangulhunting.Korean_Hunting.dto.User;
 import com.hangulhunting.Korean_Hunting.dto.UserResDto;
-import com.hangulhunting.Korean_Hunting.dto.UserRole;
 import com.hangulhunting.Korean_Hunting.entity.RefreshToken;
 import com.hangulhunting.Korean_Hunting.entity.UserEntity;
+import com.hangulhunting.Korean_Hunting.entity.enumpackage.UserRole;
 import com.hangulhunting.Korean_Hunting.exception.CustomException;
 import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
 import com.hangulhunting.Korean_Hunting.jwt.TokenProvider;
+import com.hangulhunting.Korean_Hunting.jwt.etc.TokenETC;
 import com.hangulhunting.Korean_Hunting.repository.UserRepository;
 
 import jakarta.servlet.http.HttpServletRequest;

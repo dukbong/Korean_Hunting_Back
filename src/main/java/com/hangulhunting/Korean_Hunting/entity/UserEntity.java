@@ -1,6 +1,6 @@
 package com.hangulhunting.Korean_Hunting.entity;
 
-import com.hangulhunting.Korean_Hunting.dto.UserRole;
+import com.hangulhunting.Korean_Hunting.entity.enumpackage.UserRole;
 import com.hangulhunting.Korean_Hunting.jwt.filter.JwtFilter;
 
 import jakarta.persistence.Column;

@@ -17,11 +17,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import com.hangulhunting.Korean_Hunting.dto.TokenDto;
-import com.hangulhunting.Korean_Hunting.dto.TokenETC;
 import com.hangulhunting.Korean_Hunting.entity.RefreshToken;
 import com.hangulhunting.Korean_Hunting.entity.UserEntity;
 import com.hangulhunting.Korean_Hunting.exception.CustomException;
 import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
+import com.hangulhunting.Korean_Hunting.jwt.etc.TokenETC;
 import com.hangulhunting.Korean_Hunting.repository.UserRepository;
 import com.hangulhunting.Korean_Hunting.service.BlackListService;
 import com.hangulhunting.Korean_Hunting.service.RefreshTokenService;

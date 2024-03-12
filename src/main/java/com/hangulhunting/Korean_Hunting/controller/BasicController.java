@@ -10,9 +10,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hangulhunting.Korean_Hunting.dto.TokenDto;
-import com.hangulhunting.Korean_Hunting.dto.TokenETC;
 import com.hangulhunting.Korean_Hunting.dto.User;
 import com.hangulhunting.Korean_Hunting.dto.UserResDto;
+import com.hangulhunting.Korean_Hunting.jwt.etc.TokenETC;
 import com.hangulhunting.Korean_Hunting.service.UserService;
 
 import jakarta.servlet.http.HttpServletRequest;
