@@ -125,5 +125,4 @@ public class UserService {
 			refreshTokenRepository.deleteByValue(refreshToken.get().getValue());
 		}
 	}
-
 }

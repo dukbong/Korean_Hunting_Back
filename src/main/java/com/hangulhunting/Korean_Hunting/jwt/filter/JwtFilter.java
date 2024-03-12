@@ -13,15 +13,12 @@ import com.hangulhunting.Korean_Hunting.dto.TokenDto;
 import com.hangulhunting.Korean_Hunting.dto.TokenETC;
 import com.hangulhunting.Korean_Hunting.entity.UserEntity;
 import com.hangulhunting.Korean_Hunting.jwt.TokenProvider;
-import com.hangulhunting.Korean_Hunting.repository.BlackListRepository;
-import com.hangulhunting.Korean_Hunting.repository.RefreshTokenRepository;
-import com.hangulhunting.Korean_Hunting.repository.UserRepository;
+import com.hangulhunting.Korean_Hunting.service.BlackListService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,9 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 public class JwtFilter extends OncePerRequestFilter {
 
 	private final TokenProvider tokenProvider;
-	private final BlackListRepository blackListRepository;
-	private final UserRepository userRepository;
-	private final RefreshTokenRepository refreshTokenRepository;
+	private final BlackListService blackListService;
 
 	private String resolveToken(HttpServletRequest request) {
 		String bearerToken = request.getHeader(TokenETC.AUTHORIZATION);
@@ -43,15 +38,10 @@ public class JwtFilter extends OncePerRequestFilter {
 		return null;
 	}
 
-	@Transactional
-	private String resolveRefreshToken(HttpServletRequest request) {
-		String token = resolveToken(request);
+	private String resolveRefreshToken(String token) {
 		String username = tokenProvider.getAuthentication(token).getName();
-//		Optional<RefreshToken> refreshToken = refreshTokenRepository
-//				.findByUserEntityId(userRepository.findByUserId(username).get().getId());
-		Optional<UserEntity> userEntity = userRepository.findByUserId(username);
+		Optional<UserEntity> userEntity = tokenProvider.findUserInfo(username);
 		if (userEntity.isPresent()) {
-//			return refreshToken.get().getValue();
 			return userEntity.get().getRefreshToken().getValue();
 		}
 		return null;
@@ -61,33 +51,35 @@ public class JwtFilter extends OncePerRequestFilter {
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 
-		log.info("JWT Filter Start...");
-
 		String jwt = resolveToken(request);
 		if (StringUtils.hasText(jwt)) {
-			if (tokenProvider.validateToken(jwt)) {
-				if (!blackListRepository.existsByToken(jwt)) {
-					Authentication authentication = tokenProvider.getAuthentication(jwt);
-					SecurityContextHolder.getContext().setAuthentication(authentication);
+			log.info("tokenProvider.validateToken(jwt)       = {}", tokenProvider.validateToken(jwt));
+			log.info("tokenProvider.reissuanceTimeCheck(jwt) = {}", tokenProvider.reissuanceTimeCheck(jwt));
+			if (tokenProvider.validateToken(jwt) && tokenProvider.reissuanceTimeCheck(jwt)) {
+				if (!blackListService.existsByToken(jwt)) {
+					setSecurityContext(jwt);
 				}
 			} else {
-				String refreshToken = resolveRefreshToken(request);
+				String refreshToken = resolveRefreshToken(jwt);
 				if (refreshToken != null) {
 					if (tokenProvider.validateToken(refreshToken)) {
 						TokenDto newTokenDto = tokenProvider.refreshGenerateTokenDto(refreshToken);
 						if (newTokenDto != null) {
+							setSecurityContext(newTokenDto.getAccessToken());
 							log.info("새로운 토큰 발급 : {}", newTokenDto.getAccessToken());
 							response.setHeader(TokenETC.AUTHORIZATION, TokenETC.PREFIX + newTokenDto.getAccessToken());
 						}
-					} else {
-						log.info("기존에 있던 refreshToken 삭제......................");
-						refreshTokenRepository.deleteByValue(refreshToken);
 					}
 				}
 			}
 		}
 
 		filterChain.doFilter(request, response);
+	}
+	
+	private void setSecurityContext(String token) {
+		Authentication authentication = tokenProvider.getAuthentication(token);
+		SecurityContextHolder.getContext().setAuthentication(authentication);
 	}
 
 }

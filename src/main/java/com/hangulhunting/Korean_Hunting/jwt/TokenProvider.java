@@ -52,8 +52,8 @@ public class TokenProvider {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
         
-        this.blackListRepository = blackListRepository;
         this.userRepository = userRepository;
+        this.blackListRepository = blackListRepository;
         this.refreshTokenRepository = refreshTokenRepository;
     }
 	
@@ -85,7 +85,7 @@ public class TokenProvider {
 					   .build();
 	}
 	
-	// 인증 정보 가져오기
+	// 인증 권한 정보 가져오기
 	public Authentication getAuthentication(String accessToken) {
 		Claims claims = parseClaims(accessToken);
 		
@@ -120,14 +120,32 @@ public class TokenProvider {
     		log.error("{}", "잘못된 JWT 서명입니다.");
     	} catch (ExpiredJwtException e) {
     		log.error("{}", "만료된 JWT 토큰입니다.");
-    		BlackList blackList = BlackList.builder().token(token).build();
-    		blackListRepository.save(blackList);
+    		if(parseClaims(token).getSubject() == null) {
+    			refreshTokenRepository.deleteByValue(token);
+    		} else {
+    			BlackList blackList = BlackList.builder().token(token).build();
+    			blackListRepository.save(blackList);
+    		}
     	} catch (UnsupportedJwtException e) {
     		log.error("{}", "지원되지 않는 JWT 토큰입니다.");
     	} catch (IllegalArgumentException e) {
     		log.error("JWT 토큰이 잘못되었습니다.");
     	}
     	return false;
+    }
+    
+	public Optional<UserEntity> findUserInfo(String userId){
+		return userRepository.findByUserId(userId);
+	}
+    
+    // 만료 10분전인 토큰으로 요청시 새로운 토큰 발급 ( 중단 되지 않도록 하기 위함 )
+    public boolean reissuanceTimeCheck(String token) {
+    	Claims claims = parseClaims(token);
+    	Date expirationDate = claims.getExpiration();
+    	Date now = new Date();
+//    	long maxreissuanceTime = 20 * 60 * 1000; // 20분
+    	long maxreissuanceTime =  60 * 1000 * 59; // 59분
+    	return expirationDate.getTime() - now.getTime() > maxreissuanceTime;
     }
 
     @Transactional

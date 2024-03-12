@@ -7,7 +7,7 @@ public class TokenETC {
 	public static final String AUTHORIZATION = "Authorization";
 	public static final String AUTHORITIES_KEY = "auth";
 //	public static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 30; // 30분
-	public static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60; // 1분
+	public static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 60; // 1시간
 	public static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 24;  // 1일
 	
 }
