@@ -53,8 +53,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
 		String jwt = resolveToken(request);
 		if (StringUtils.hasText(jwt)) {
-			log.info("tokenProvider.validateToken(jwt)       = {}", tokenProvider.validateToken(jwt));
-			log.info("tokenProvider.reissuanceTimeCheck(jwt) = {}", tokenProvider.reissuanceTimeCheck(jwt));
 			if (tokenProvider.validateToken(jwt) && tokenProvider.reissuanceTimeCheck(jwt)) {
 				if (!blackListService.existsByToken(jwt)) {
 					setSecurityContext(jwt);
@@ -66,14 +64,13 @@ public class JwtFilter extends OncePerRequestFilter {
 						TokenDto newTokenDto = tokenProvider.refreshGenerateTokenDto(refreshToken);
 						if (newTokenDto != null) {
 							setSecurityContext(newTokenDto.getAccessToken());
-							log.info("새로운 토큰 발급 : {}", newTokenDto.getAccessToken());
+							blackListService.save(jwt);
 							response.setHeader(TokenETC.AUTHORIZATION, TokenETC.PREFIX + newTokenDto.getAccessToken());
 						}
 					}
 				}
 			}
 		}
-
 		filterChain.doFilter(request, response);
 	}
 	
