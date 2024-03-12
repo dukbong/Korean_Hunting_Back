@@ -31,7 +31,6 @@ public class RefreshTokenService {
 
 	public Optional<RefreshToken> findByUserId(String username) {
 		return refreshTokenRepository.findByUserEntityId(userRepository.findByUserId(username).get().getId());
-//		return null;
 	}
 	
 }
