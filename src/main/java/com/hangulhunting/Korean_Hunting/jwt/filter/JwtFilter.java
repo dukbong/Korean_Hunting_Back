@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.hangulhunting.Korean_Hunting.dto.TokenDto;
+import com.hangulhunting.Korean_Hunting.dto.token.TokenDto;
 import com.hangulhunting.Korean_Hunting.entity.RefreshToken;
 import com.hangulhunting.Korean_Hunting.jwt.TokenProvider;
 import com.hangulhunting.Korean_Hunting.jwt.etc.TokenETC;

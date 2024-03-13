@@ -18,6 +18,7 @@ public class SecurityUtil {
         }
         
         log.info("get Name () = > {}", authentication.getName());
+        log.info("get Name parse Long = > {}", Long.parseLong(authentication.getName()));
         
         return Long.parseLong(authentication.getName());
     }

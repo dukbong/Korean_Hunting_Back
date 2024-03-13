@@ -11,9 +11,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.hangulhunting.Korean_Hunting.dto.TokenDto;
 import com.hangulhunting.Korean_Hunting.dto.User;
-import com.hangulhunting.Korean_Hunting.dto.UserResDto;
+import com.hangulhunting.Korean_Hunting.dto.response.UserResDto;
+import com.hangulhunting.Korean_Hunting.dto.token.TokenDto;
 import com.hangulhunting.Korean_Hunting.entity.RefreshToken;
 import com.hangulhunting.Korean_Hunting.entity.UserEntity;
 import com.hangulhunting.Korean_Hunting.entity.enumpackage.UserRole;
@@ -81,7 +81,7 @@ public class UserService {
 		// 1. id / pw 기반으로 authenticationToken 생성
 		UsernamePasswordAuthenticationToken authenticationToken = user.toAuthentication();
 		// 2. 실제 검증 (비밀번호 체크)
-		// authenticate 멧드가 실행시 CustomUserDetailsService에서 만들었던 loadUserByUsername 실행
+		// authenticate 메소드가 실행시 CustomUserDetailsService에서 만들었던 loadUserByUsername 실행
 		Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
 		// 3. 인증 정보를 기반으로 jwt 생성
 		TokenDto tokenDto = tokenProvider.generateTokenDto(authentication);

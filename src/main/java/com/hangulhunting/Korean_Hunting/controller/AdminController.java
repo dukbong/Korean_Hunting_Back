@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hangulhunting.Korean_Hunting.dto.User;
-import com.hangulhunting.Korean_Hunting.dto.UserResDto;
+import com.hangulhunting.Korean_Hunting.dto.response.UserResDto;
 import com.hangulhunting.Korean_Hunting.entity.UserEntity;
 import com.hangulhunting.Korean_Hunting.service.AdminService;
 

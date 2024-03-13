@@ -16,7 +16,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import com.hangulhunting.Korean_Hunting.dto.TokenDto;
+import com.hangulhunting.Korean_Hunting.dto.token.TokenDto;
 import com.hangulhunting.Korean_Hunting.entity.RefreshToken;
 import com.hangulhunting.Korean_Hunting.entity.UserEntity;
 import com.hangulhunting.Korean_Hunting.exception.CustomException;
@@ -46,13 +46,11 @@ public class TokenProvider {
 	private final Key key;
 	private final BlackListService blackListService;
 	private final RefreshTokenService refreshTokenService;
-	private final UserRepository userRepository;
 	
-	public TokenProvider(@Value("${jwt.secret}") String secretKey, BlackListService blackListService,UserRepository userRepository, RefreshTokenService refreshTokenService) {
+	public TokenProvider(@Value("${jwt.secret}") String secretKey, BlackListService blackListService, RefreshTokenService refreshTokenService) {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
         
-        this.userRepository = userRepository;
         this.blackListService = blackListService;
         this.refreshTokenService = refreshTokenService;
     }

@@ -12,7 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import com.hangulhunting.Korean_Hunting.dto.User;
-import com.hangulhunting.Korean_Hunting.dto.UserResDto;
+import com.hangulhunting.Korean_Hunting.dto.response.UserResDto;
 import com.hangulhunting.Korean_Hunting.service.UserService;
 
 @ExtendWith(MockitoExtension.class)

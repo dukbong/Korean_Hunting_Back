@@ -18,8 +18,8 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler {
 	@Override
 	public void handle(HttpServletRequest request, HttpServletResponse response,
 			AccessDeniedException accessDeniedException) throws IOException, ServletException {
-		log.error("JwtAccessDeniedHandler!!!");
-		response.sendError(HttpServletResponse.SC_FORBIDDEN);
+		log.info("권한 문제");
+		response.sendError(HttpServletResponse.SC_FORBIDDEN, "권한이 없습니다.");
 	}
 
 }

@@ -13,7 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.hangulhunting.Korean_Hunting.dto.User;
-import com.hangulhunting.Korean_Hunting.dto.UserResDto;
+import com.hangulhunting.Korean_Hunting.dto.response.UserResDto;
 import com.hangulhunting.Korean_Hunting.exception.CustomException;
 import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
 import com.hangulhunting.Korean_Hunting.repository.UserRepository;

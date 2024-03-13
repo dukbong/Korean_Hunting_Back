@@ -1,4 +1,4 @@
-package com.hangulhunting.Korean_Hunting.dto;
+package com.hangulhunting.Korean_Hunting.dto.token;
 
 import lombok.Builder;
 import lombok.Getter;

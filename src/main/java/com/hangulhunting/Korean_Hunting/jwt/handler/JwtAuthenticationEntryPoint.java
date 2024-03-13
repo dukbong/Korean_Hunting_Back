@@ -2,20 +2,13 @@ package com.hangulhunting.Korean_Hunting.jwt.handler;
 
 import java.io.IOException;
 
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
-
-import com.hangulhunting.Korean_Hunting.jwt.TokenProvider;
-import com.hangulhunting.Korean_Hunting.jwt.etc.TokenETC;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Component
@@ -25,8 +18,8 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 	@Override
 	public void commence(HttpServletRequest request, HttpServletResponse response,
 			AuthenticationException authException) throws IOException, ServletException {
-		log.error("JwtAuthenticationEntryPoint =====================================");
-		response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+		log.info("인증 문제");
+		response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "인증되지 않은 상태입니다.");
 	}
 
 }

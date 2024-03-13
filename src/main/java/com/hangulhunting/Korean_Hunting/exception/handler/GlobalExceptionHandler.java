@@ -17,6 +17,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({Exception.class, RuntimeException.class})
     protected ResponseEntity<ErrorResponse> catchException(Exception e) {
         log.error(e.getMessage());
+        log.error("{}", e);
         return ResponseEntity.internalServerError().body(new ErrorResponse(e.getMessage(), e.toString()));
     }
 

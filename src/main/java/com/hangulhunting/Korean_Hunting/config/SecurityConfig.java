@@ -27,21 +27,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfig {
 	
-//	private final AcountService acountService;
-//	private final TokenProvider tokenProvider;
 	private final JwtFilter jwtFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
-//    private final BlackListRepository blackListRepository;
-    
-//    @Bean
-//    public AuthenticationManager authenticationManager() {
-//        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
-//        authenticationProvider.setUserDetailsService(acountService);
-//        authenticationProvider.setPasswordEncoder(new BCryptPasswordEncoder());
-//
-//        return new ProviderManager(Collections.singletonList(authenticationProvider));
-//    }
 	
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -49,6 +37,7 @@ public class SecurityConfig {
 				.requestMatchers("/join").permitAll() // 회원가입
 				.requestMatchers("/admin/**").hasRole("ADMIN") // 관리자 페이지
 				.requestMatchers("/info/**").hasAnyRole("USER", "ADMIN") // 관리자 페이지
+				.requestMatchers("/file/**").hasAnyRole("USER", "ADMIN")
 				.anyRequest().authenticated());
 
 		http.logout(logout -> logout.disable());
