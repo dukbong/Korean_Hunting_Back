@@ -53,8 +53,8 @@ public class SecurityConfig {
 		});
 		
 		http.exceptionHandling(handling -> handling
-													.authenticationEntryPoint(jwtAuthenticationEntryPoint)
 													.accessDeniedHandler(jwtAccessDeniedHandler)
+													.authenticationEntryPoint(jwtAuthenticationEntryPoint)
 		);
 		
 	    http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

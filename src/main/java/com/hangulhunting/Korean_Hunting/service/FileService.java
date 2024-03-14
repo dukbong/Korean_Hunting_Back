@@ -2,7 +2,6 @@ package com.hangulhunting.Korean_Hunting.service;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -42,8 +41,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
+@Slf4j
 public class FileService {
 
 	private final NotDeleteFolderRepository notDeleteFolderRepository; 
@@ -68,6 +67,7 @@ public class FileService {
 					.filter(path -> path.getFileName().toString().equals("korean_inside_JSP.txt")).findFirst().orElse(null);
 			if (wordAddFilePath != null) {
 				byte[] fileContent = Files.readAllBytes(wordAddFilePath);
+				log.info("byte = {}", fileContent);
 				zip.setContent(fileContent);
 			}
 		} catch (IOException e) {
@@ -77,7 +77,6 @@ public class FileService {
 			if (tempDirectory != null) {
 	            deleteFile(tempDirectory.resolve(uid.toString()));
 	        }
-			deleteFile(tempDirectory.resolve(uid.toString()));
 		}
 		return zip;
 	}
@@ -192,10 +191,12 @@ public class FileService {
 		
 		String middleStr = System.getProperty("os.name").contains("Window") ? "\\" : "/";
 		try (BufferedWriter bw = new BufferedWriter(new FileWriter(tempDirectory + middleStr + "korean_inside_JSP.txt", true));) {
-			bw.write(targetFile);
 			
 			List<String> oldCharList = new ArrayList<>(oldCharNote);
 			for(int i  = 0; i < oldCharList.size(); i++) {
+				if(i == 0) {
+					bw.write(targetFile + "\n");
+				}
 				String row = (i + 1) + ". " + oldCharList.get(i) + "\n";
 				bw.write(row);
 			}

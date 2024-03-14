@@ -14,12 +14,10 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @Slf4j
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
-
 	@Override
 	public void commence(HttpServletRequest request, HttpServletResponse response,
 			AuthenticationException authException) throws IOException, ServletException {
 		log.info("인증 문제");
 		response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "인증되지 않은 상태입니다.");
 	}
-
 }
