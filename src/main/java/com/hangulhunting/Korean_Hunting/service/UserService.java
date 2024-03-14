@@ -107,7 +107,6 @@ public class UserService {
 	public void logoutProcess(HttpServletRequest request) {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		String token = request.getHeader(TokenETC.AUTHORIZATION);
-		log.info("logout user token  = {}", token);
 		blackListService.save(token.substring(7));
 		
 		// 로그아웃시 refresh Token 삭제

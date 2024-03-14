@@ -42,7 +42,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class FileService {
 
 	private final NotDeleteFolderRepository notDeleteFolderRepository; 
@@ -67,7 +66,6 @@ public class FileService {
 					.filter(path -> path.getFileName().toString().equals("korean_inside_JSP.txt")).findFirst().orElse(null);
 			if (wordAddFilePath != null) {
 				byte[] fileContent = Files.readAllBytes(wordAddFilePath);
-				log.info("byte = {}", fileContent);
 				zip.setContent(fileContent);
 			}
 		} catch (IOException e) {
