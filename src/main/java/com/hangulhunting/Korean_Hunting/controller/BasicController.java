@@ -42,7 +42,7 @@ public class BasicController {
 
 	@PostMapping("/join")
 	public ResponseEntity<UserResDto> join(@RequestBody User user) {
-		UserResDto result = userService.joinProcess(user);
+		UserResDto result = userService.registerUser(user);
 		return ResponseEntity.status(HttpStatus.CREATED).body(result);
 	}
 

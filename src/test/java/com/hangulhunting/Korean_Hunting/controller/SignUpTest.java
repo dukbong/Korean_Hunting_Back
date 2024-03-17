@@ -39,7 +39,7 @@ public class SignUpTest {
 	void userIdAlredyExists() {
 		// given
 		User user = new User("test1", "1234", "test1@gmail.com", "iit");
-		Mockito.when(userService.joinProcess(user))
+		Mockito.when(userService.registerUser(user))
 			   .thenThrow(new CustomException(ErrorCode.NAME_ALREADY_EXISTS, user.getUserId()));
 		
 		// when
@@ -58,7 +58,7 @@ public class SignUpTest {
 	void userIdEmptyOrNull() {
 		// given
 		User user = new User("", "1234", "test1@gmail.com", "iit");
-		Mockito.when(userService.joinProcess(user)).thenThrow(new CustomException(ErrorCode.MEMBER_IDS_IS_EMPTY_OR_NULL, user.getUserId()));
+		Mockito.when(userService.registerUser(user)).thenThrow(new CustomException(ErrorCode.MEMBER_IDS_IS_EMPTY_OR_NULL, user.getUserId()));
 		
 		// when
 		Throwable thrown = assertThrows(CustomException.class, () -> {
@@ -76,10 +76,10 @@ public class SignUpTest {
 	void join() {
 	    // given
 	    User user = new User("test1", "1234", "test1@gmail.com", "iit");
-	    Mockito.when(userService.joinProcess(user)).thenReturn(new UserResDto("회원가입에 성공하였습니다."));
+	    Mockito.when(userService.registerUser(user)).thenReturn(new UserResDto("회원가입에 성공하였습니다."));
 
 	    // when
-	    UserResDto result = userService.joinProcess(user);
+	    UserResDto result = userService.registerUser(user);
 
 	    // then
 	    Assertions.assertThat(result).isNotNull();

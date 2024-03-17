@@ -26,10 +26,8 @@ import com.hangulhunting.Korean_Hunting.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class UserService {
 
@@ -39,42 +37,47 @@ public class UserService {
 	private final AuthenticationManagerBuilder authenticationManagerBuilder;
 	private final BCryptPasswordEncoder bCryptPasswordEncoder;
 	private final TokenProvider tokenProvider;
-	
 
-	public boolean existsAnyNullOrBlank(String str) {
-		if (str == null || str.isEmpty()) {
-			return true;
-		}
-		return false;
+	public UserResDto registerUser(User user) {
+		validateUser(user);
+		UserEntity userEntity = UserEntity.builder()
+										  .userId(user.getUserId())
+										  .userPwd(bCryptPasswordEncoder.encode(user.getUserPwd()))
+										  .email(user.getEmail())
+										  .company(user.getCompany())
+										  .role(UserRole.ROLE_USER)
+										  .build();
+		userRepository.save(userEntity);
+		return new UserResDto("회원가입에 성공하였습니다.");
 	}
 
-	public boolean isValidEmail(String email) {
+	private void validateUser(User user) {
+		if (userRepository.existsByUserId(user.getUserId())) {
+			throw new CustomException(ErrorCode.NAME_ALREADY_EXISTS, user.getUserId());
+		}
+
+		if (isNullOrBlank(user.getUserId())) {
+			throw new CustomException(ErrorCode.MEMBER_IDS_IS_EMPTY_OR_NULL, user.getUserId());
+		}
+
+		if (isNullOrBlank(user.getUserPwd())) {
+			throw new CustomException(ErrorCode.MEMBER_PWD_IS_EMPTY_OR_NULL, user.getUserPwd());
+		}
+
+		if (!isValidEmail(user.getEmail())) {
+			throw new CustomException(ErrorCode.INVALID_EMAIL, user.getEmail());
+		}
+	}
+
+	private boolean isNullOrBlank(String str) {
+		return str == null || str.isEmpty();
+	}
+
+	private boolean isValidEmail(String email) {
 		String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
 		Pattern pattern = Pattern.compile(emailRegex);
 		Matcher matcher = pattern.matcher(email);
 		return !matcher.matches();
-	}
-
-	public UserResDto joinProcess(User user) {
-		if (userRepository.existsByUserId(user.getUserId()))
-			throw new CustomException(ErrorCode.NAME_ALREADY_EXISTS, user.getUserId());
-
-		if (existsAnyNullOrBlank(user.getUserId()))
-			throw new CustomException(ErrorCode.MEMBER_IDS_IS_EMPTY_OR_NULL, user.getUserId());
-
-		if (existsAnyNullOrBlank(user.getUserPwd()))
-			throw new CustomException(ErrorCode.MEMBER_PWD_IS_EMPTY_OR_NULL, user.getUserPwd());
-
-		if (isValidEmail(user.getEmail()))
-			throw new CustomException(ErrorCode.INVALID_EMAIL, user.getEmail());
-
-		UserEntity userEntity = UserEntity.builder().userId(user.getUserId())
-				.userPwd(bCryptPasswordEncoder.encode(user.getUserPwd())).email(user.getEmail())
-				.company(user.getCompany()).role(UserRole.ROLE_USER).build();
-
-		userRepository.save(userEntity);
-
-		return new UserResDto("회원가입에 성공하였습니다.");
 	}
 
 	public TokenDto loginProcess(User user) {
@@ -87,19 +90,19 @@ public class UserService {
 		TokenDto tokenDto = tokenProvider.generateTokenDto(authentication);
 		// 4. refresh 토큰 저장
 		UserEntity loginUser = userRepository.findByUserId(authentication.getName()).get();
-		RefreshToken refreshToken = RefreshToken.builder()
-				 								.value(tokenDto.getRefreshToken())
-				 								.userEntity(loginUser)
-				 								.build();
+		RefreshToken refreshToken = RefreshToken.builder().value(tokenDto.getRefreshToken()).userEntity(loginUser)
+				.build();
 		refreshTokenService.save(refreshToken);
 		return tokenDto;
 	}
 
 	public User userInfo() {
-		Authentication  authentication = SecurityContextHolder.getContext().getAuthentication();
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		String userId = authentication.getName();
-		UserEntity userEntity = userRepository.findByUserId(userId).orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND_INFO));
-		User user = User.builder().userId(userEntity.getUserId()).email(userEntity.getEmail()).company(userEntity.getCompany()).build();
+		UserEntity userEntity = userRepository.findByUserId(userId)
+				.orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND_INFO));
+		User user = User.builder().userId(userEntity.getUserId()).email(userEntity.getEmail())
+				.company(userEntity.getCompany()).build();
 		return user;
 	}
 
@@ -108,11 +111,11 @@ public class UserService {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		String token = request.getHeader(TokenETC.AUTHORIZATION);
 		blackListService.save(token.substring(7));
-		
+
 		// 로그아웃시 refresh Token 삭제
 		String username = authentication.getName();
 		Optional<UserEntity> userEntity = userRepository.findByUserId(username);
-		if(userEntity.isPresent()) {
+		if (userEntity.isPresent()) {
 			refreshTokenService.deleteByValue(userEntity.get().getRefreshToken().getValue());
 		}
 	}
