@@ -136,8 +136,7 @@ public class TokenProvider {
     	Claims claims = parseClaims(token);
     	Date expirationDate = claims.getExpiration();
     	Date now = new Date();
-//    	long maxreissuanceTime = 20 * 60 * 1000; // 20분
-    	long maxreissuanceTime =  60 * 1000 * 59; // 59분
+    	long maxreissuanceTime = 10 * 60 * 1000; // 20분
     	return expirationDate.getTime() - now.getTime() > maxreissuanceTime;
     }
 
