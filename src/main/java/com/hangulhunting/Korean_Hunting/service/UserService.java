@@ -64,7 +64,7 @@ public class UserService {
 			throw new CustomException(ErrorCode.MEMBER_PWD_IS_EMPTY_OR_NULL, user.getUserPwd());
 		}
 
-		if (!isValidEmail(user.getEmail())) {
+		if (isValidEmail(user.getEmail())) {
 			throw new CustomException(ErrorCode.INVALID_EMAIL, user.getEmail());
 		}
 	}

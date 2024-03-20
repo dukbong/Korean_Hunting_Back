@@ -1,10 +1,12 @@
 package com.hangulhunting.Korean_Hunting.service;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -20,6 +22,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -38,172 +42,214 @@ import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
 import com.hangulhunting.Korean_Hunting.repository.NotDeleteFolderRepository;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 public class FileService {
 
-	private final NotDeleteFolderRepository notDeleteFolderRepository; 
-	
+	private final NotDeleteFolderRepository notDeleteFolderRepository;
+
 	public ZipFile koreanSearch(MultipartFile file) {
 		UUID uid = UUID.randomUUID();
 		ArrayList<String> result = new ArrayList<>();
 		ZipFile zip = new ZipFile();
-		Path tempDirectory = null;
+		Path rootFolderPath = null;
 		try {
-			String currentWorkingDirectory = System.getProperty("user.dir");
-			Path projectRoot = Paths.get(currentWorkingDirectory); // 절대 경로로 표시
-			tempDirectory = Files.createDirectories(projectRoot.resolve("temp-zip")); //
-			Path uuidDirectory = Files.createDirectories(tempDirectory.resolve(uid.toString()));
-			Path uploadedFilePath = uuidDirectory.resolve(file.getOriginalFilename());
-			Files.copy(file.getInputStream(), uploadedFilePath, StandardCopyOption.REPLACE_EXISTING);
-			String unzipDirectory = unzip(uploadedFilePath.toString(), uuidDirectory.toString());
-			result.addAll(printDirectory(unzipDirectory, uuidDirectory.toString(), FileType.values()));
+			// 프로젝트의 가장 상단에 폴더를 두고 작업할 예정 [변경 예정]
+			Path currentWoringPath = Paths.get(System.getProperty("user.dir"));
+			rootFolderPath = currentWoringPath.resolve("koreaHuntingFolder");
+			Path uuidFolderPath = createDirectories(rootFolderPath.resolve(uid.toString()));
+
+			// 압축해제
+			unzip(file.getInputStream(), uuidFolderPath);
+
+			result.addAll(printDirectory(uuidFolderPath, FileType.values()));
 			zip.setDirectory(result);
 
-			Path wordAddFilePath = Files.list(uuidDirectory)
-					.filter(path -> path.getFileName().toString().equals("korean_inside_JSP.txt")).findFirst().orElse(null);
+			Path wordAddFilePath = Files.list(uuidFolderPath)
+					.filter(path -> path.getFileName().toString().equals("korean_inside_JSP.txt")).findFirst()
+					.orElse(null);
 			if (wordAddFilePath != null) {
 				byte[] fileContent = Files.readAllBytes(wordAddFilePath);
 				zip.setContent(fileContent);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
-			deleteFile(tempDirectory.resolve(uid.toString()));
+			deleteFile(rootFolderPath.resolve(uid.toString()));
 		} finally {
-			if (tempDirectory != null) {
-	            deleteFile(tempDirectory.resolve(uid.toString()));
-	        }
+			if (rootFolderPath != null) {
+//	            deleteFile(rootFolderPath.resolve(uid.toString()));
+			}
 		}
 		return zip;
 	}
 
-	private String unzip(String zipFilePath, String destDirectory) {
-		String unzipDirectory = null;
-		try (ZipInputStream zipInputStream = new ZipInputStream(Files.newInputStream(Paths.get(zipFilePath)))) {
+	// 압축 해제
+	private void unzip(InputStream fileInputStream, Path outputPath) {
+		try (ZipInputStream zipInputStream = new ZipInputStream(new BufferedInputStream(fileInputStream))) {
 			ZipEntry zipEntry = zipInputStream.getNextEntry();
-			unzipDirectory = Paths.get(destDirectory, zipEntry.getName()).toString();
 			while (zipEntry != null) {
-				Path filePath = Paths.get(destDirectory, zipEntry.getName());
+				Path filePath = outputPath.resolve(zipEntry.getName());
 				if (!zipEntry.isDirectory()) {
-					Files.createDirectories(filePath.getParent());
-					Files.copy(zipInputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
+					createDirectories(filePath.getParent());
+					createFile(zipInputStream, filePath);
 				} else {
-					Files.createDirectories(filePath);
+					createDirectories(filePath);
 				}
 				zipEntry = zipInputStream.getNextEntry();
 			}
 		} catch (IOException e) {
-			deleteFile(Paths.get(destDirectory));
+			deleteFile(outputPath);
 			throw new CustomException(ErrorCode.FILE_UNZIP_ERROR);
 		}
-		return unzipDirectory;
 	}
 
-	private ArrayList<String> printDirectory(String directoryPath, String tempDirectory, FileType[] fileType) {
-		
-		ArrayList<String> list = new ArrayList<>(); // 확인용
-		try (Stream<Path> paths = Files.walk(Paths.get(tempDirectory))) {
-			Path root = Paths.get(tempDirectory);
-			paths.filter(Files::isRegularFile).map(path -> root.relativize(path)).map(Path::toString).forEach(i -> {
-				for (int j = 0; j < fileType.length; j++) {
-					if (i.endsWith(fileType[j].getValue())) {
-						String fileContent = FileContent(tempDirectory, i);
-						boolean check = search(tempDirectory, i, fileContent, fileType[j].getValue());
-						if (check) {
-							i += FileStatus._$INSERT;
-						}
-						break;
-					}
-				}
-				list.add(i);
-			});
-			Collections.reverse(list);
+	// 파일 만들기
+	private void createFile(InputStream inputStream, Path targetPath) {
+		try {
+			Files.copy(inputStream, targetPath, StandardCopyOption.REPLACE_EXISTING);
 		} catch (IOException e) {
-			deleteFile(Paths.get(tempDirectory));
+			e.printStackTrace();
+		}
+	}
+
+	// 폴더 만들기
+	private Path createDirectories(Path path) throws IOException {
+		return Files.createDirectories(path);
+	}
+
+	// 파일 구조를 반환하는 메소드
+	private ArrayList<String> printDirectory(Path uuidFolderPath, FileType[] fileType) {
+		ArrayList<String> fileTree = new ArrayList<>();
+
+		try (Stream<Path> paths = Files.walk(uuidFolderPath)) {
+			Path root = uuidFolderPath;
+			paths.filter(Files::isRegularFile).map(path -> root.relativize(path)).map(Path::toString)
+					.forEach(filePath -> processFile(uuidFolderPath, filePath, fileType, fileTree));
+			Collections.reverse(fileTree);
+		} catch (IOException e) {
+			deleteFile(uuidFolderPath);
 			throw new CustomException(ErrorCode.FILE_STRUCTURE_ERROR);
 		}
-
-		return list;
+		return fileTree;
 	}
 
-
-	public String FileContent(String tempDirectory, String targetFile) {
-		StringBuilder sb = new StringBuilder();
-		sb.append(tempDirectory).append("/").append("/").append(targetFile);
-		String filePath = sb.toString();
-		sb.setLength(0);
-
-		try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-			String line;
-			while ((line = reader.readLine()) != null) {
-				sb.append(line).append("\n");
+	// 파일 구조를 파악하는 메소드
+	private void processFile(Path uuidFolderPath, String filePath, FileType[] fileType, ArrayList<String> fileTree) {
+		for (FileType type : fileType) {
+			if (isFileType(filePath, type)) {
+				fileTree.add(appendInsertStatus(filePath, uuidFolderPath, type));
+				break;
 			}
+		}
+	}
+
+	// 파일 path의 끝에가 FileType에 지정되어있는지 확인
+	private boolean isFileType(String filePath, FileType fileType) {
+		return filePath.endsWith(fileType.getValue());
+	}
+
+	// 파일 안에 한글이 있다면 FileStatus의 값을 넣어서 반환
+	private String appendInsertStatus(String filePath, Path uuidFolderPath, FileType fileType) {
+		String fileContent = getFileContent(uuidFolderPath, filePath);
+		if (search(uuidFolderPath, filePath, fileContent, fileType.getValue())) {
+			filePath += FileStatus._$INSERT;
+		}
+		return filePath;
+	}
+
+	// 파일을 하나씩 읽어서 문자열로 만든 후 반환하는 메소드
+	public String getFileContent(Path uuidFolderPath, String targetFile) {
+		StringBuilder sb = new StringBuilder();
+		Path checkFilePath = uuidFolderPath.resolve(targetFile);
+		// BufferedReader 보다 Files.lines가 jdk 1.8 이후 부터 효율적이라고 해서 테스트 해봤는데 큰 차이는 없었지만
+		// 써보기로 결정.
+		try (Stream<String> lines = Files.lines(checkFilePath)) {
+			lines.forEach(line -> sb.append(line).append("\n"));
 		} catch (IOException e) {
-			deleteFile(Paths.get(tempDirectory));
+			deleteFile(uuidFolderPath);
 			throw new CustomException(ErrorCode.FILE_READ_ERROR);
 		}
 		return sb.toString();
 	}
 
-	private boolean search(String tempDirectory, String targetFile, String fileContent,
-			String fileType) {
-		StringBuilder sb = new StringBuilder();
-		boolean foundKorean = false;
-		sb.append(tempDirectory).append("/").append("/").append(targetFile);
-		String filePath = sb.toString();
-
+	// [리팩토링 중...]
+	// 한글이 있는지 확인하고 코드
+	private boolean search(Path uuidFolderPath, String targetFile, String fileContent, String fileType) {
 		Set<String> oldCharNote = new TreeSet<>();
-		sb.setLength(0); // 초기화
+		boolean foundKorean = false;
+		Path filePath = uuidFolderPath.resolve(targetFile);
+		StringBuilder sb = new StringBuilder();
 
-		try (FileWriter fileWriter = new FileWriter(filePath); BufferedWriter bw = new BufferedWriter(fileWriter)) {
-			String[] arr = fileContent.split("\n");
-			if (targetFile.endsWith(fileType)) {
-				for (int i = 0; i < arr.length; i++) {
-					String row = arr[i];
-					row = row.replaceAll("<!--(.*?)-->", "");
-					Pattern pattern = Pattern.compile(">(.*?)<"); // 태그
-					Matcher matcher = pattern.matcher(row);
-					StringBuilder resultBuilder = new StringBuilder();
-					while (matcher.find()) {
-						String extractedText = matcher.group(1);
-						if (!extractedText.matches(".*\\$\\{.*?}.*")) {
-							resultBuilder.append(extractedText);
-							resultBuilder.append(" "); // Add space
-						}
+		try (BufferedWriter bw = new BufferedWriter(new FileWriter(filePath.toString()))) {
+
+			String removeCommentsContent = removeComments(fileContent);
+			String[] arr = removeCommentsContent.split("\n");
+			for (int i = 0; i < arr.length; i++) {
+				String row = arr[i];
+				Pattern pattern = Pattern.compile(">(.*?)<"); // 태그
+				Matcher matcher = pattern.matcher(row);
+				StringBuilder resultBuilder = new StringBuilder();
+				while (matcher.find()) {
+					String extractedText = matcher.group(1);
+					if (!extractedText.matches(".*\\$\\{.*?}.*")) {
+						resultBuilder.append(extractedText);
+						resultBuilder.append(" "); // Add space
 					}
-					String extractedText = resultBuilder.toString().trim();
-					if (containsKorean(extractedText)) {
-						oldCharNote.add(extractedText);
-						foundKorean = true;
-					}
-					sb.append(arr[i]).append("\n");
 				}
+				String extractedText = resultBuilder.toString().trim();
+				if (containsKorean(extractedText)) {
+					oldCharNote.add(extractedText);
+					foundKorean = true;
+				}
+				sb.append(arr[i]).append("\n");
 			}
 			bw.write(sb.toString());
 		} catch (IOException e) {
-			deleteFile(Paths.get(tempDirectory));
+			deleteFile(uuidFolderPath);
 			throw new CustomException(ErrorCode.FILE_SEARCH_ERROR);
 		}
-		
-		String middleStr = System.getProperty("os.name").contains("Window") ? "\\" : "/";
-		try (BufferedWriter bw = new BufferedWriter(new FileWriter(tempDirectory + middleStr + "korean_inside_JSP.txt", true));) {
-			
-			List<String> oldCharList = new ArrayList<>(oldCharNote);
-			for(int i  = 0; i < oldCharList.size(); i++) {
-				if(i == 0) {
-					bw.write(targetFile + "\n");
+
+		if(oldCharNote.size() <= 1) {
+			String middleStr = System.getProperty("os.name").contains("Window") ? "\\" : "/";
+			try (BufferedWriter bw = new BufferedWriter(
+					new FileWriter(uuidFolderPath + middleStr + "korean_inside_JSP.txt", true));) {
+				
+				List<String> oldCharList = new ArrayList<>(oldCharNote);
+				for (int i = 0; i < oldCharList.size(); i++) {
+					if (i == 0) {
+						bw.write(targetFile + "\n");
+					}
+					String row = (i + 1) + ". " + oldCharList.get(i) + "\n";
+					bw.write(row);
 				}
-				String row = (i + 1) + ". " + oldCharList.get(i) + "\n";
-				bw.write(row);
+				
+			} catch (IOException e) {
+				deleteFile(uuidFolderPath);
+				throw new CustomException(ErrorCode.FILE_WRITE_ERROR);
 			}
-			
-		} catch (IOException e) {
-			deleteFile(Paths.get(tempDirectory));
-			throw new CustomException(ErrorCode.FILE_WRITE_ERROR);
 		}
+		
 		return foundKorean;
+	}
+
+	// 주석 제거 메소드
+	private String removeComments(String fileContent) {
+		// 여러줄 주석 제거
+		fileContent = fileContent.replaceAll("/\\*(.|[\\r\\n])*?\\*/", "");
+
+		// HTML 주석 제거
+		fileContent = fileContent.replaceAll("<!--(.*?)-->", "");
+
+		// JSP 주석 제거
+		fileContent = fileContent.replaceAll("<%--(.*?)--%>", "");
+
+		// 한 줄 주석 제거
+		fileContent = fileContent.replaceAll("//.*", "");
+		fileContent = fileContent.replaceAll("<%.*%>", "");
+		fileContent = fileContent.replaceAll("<%.*%>", "");
+
+		return fileContent;
 	}
 
 	private boolean containsKorean(String text) {
@@ -233,9 +279,7 @@ public class FileService {
 						}
 					});
 		} catch (IOException e) {
-			NotDeleteFolder notDeleteFolder = NotDeleteFolder.builder()
-															 .folderPath(deleteFilePath.toString())
-															 .build();
+			NotDeleteFolder notDeleteFolder = NotDeleteFolder.builder().folderPath(deleteFilePath.toString()).build();
 			notDeleteFolderRepository.save(notDeleteFolder);
 			e.printStackTrace();
 		}
