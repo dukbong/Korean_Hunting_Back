@@ -1,8 +1,9 @@
-package com.hangulhunting.Korean_Hunting.service;
+package com.hangulhunting.Korean_Hunting.etc;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
+import org.junit.jupiter.api.Test;
 import org.xerial.snappy.Snappy;
 
 import lombok.extern.slf4j.Slf4j;
@@ -10,11 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SnappyCompressTest {
 
-	public static void main(String[] args) throws UnsupportedEncodingException {
-		new SnappyCompressTest().test();
-	}
-
-	private void test() throws UnsupportedEncodingException {
+	@Test
+	public void test() throws UnsupportedEncodingException {
 		String str = "I misread ReadMe and tried to use it as a zip file compression library, but it failed. It's my mistake.\r\n"
 					 + "From next time, make it a habit to read Read Me carefully.\r\n"
 					 + "근데 이거 압축률 장난아니게 낮구나.... 한글을 안되는거 같군요?";

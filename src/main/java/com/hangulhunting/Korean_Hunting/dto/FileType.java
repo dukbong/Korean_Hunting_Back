@@ -7,7 +7,12 @@ import lombok.Getter;
 @Getter
 public enum FileType {
 	
-	JSP(".jsp");
+	JSP(".jsp"), 
+	PYTHON(".py"),
+	CS(".cs"),
+	JAVA(".java"),
+	JS(".js"),
+	HTML(".html");
 
     private final String value;
 
