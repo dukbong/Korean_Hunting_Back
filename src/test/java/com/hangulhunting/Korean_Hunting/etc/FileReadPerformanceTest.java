@@ -1,4 +1,4 @@
-package com.hangulhunting.Korean_Hunting.controller.etc;
+package com.hangulhunting.Korean_Hunting.etc;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
