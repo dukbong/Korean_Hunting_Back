@@ -12,7 +12,4 @@ public enum ExtractionStrategyType {
 	
 	private String value;
 
-	public String getValue() {
-		return this.value;
-	}
 }

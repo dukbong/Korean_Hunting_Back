@@ -1,5 +1,7 @@
 package com.hangulhunting.Korean_Hunting.serviceImpl.file;
 
+import java.util.Set;
+
 import org.springframework.stereotype.Component;
 
 import com.hangulhunting.Korean_Hunting.entity.enumpackage.ExtractionStrategyType;
@@ -12,11 +14,11 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class ExtractionStrategyProvider {
-
+	
 	private final KoreanWordExtractionStrategy koreanWordExtractionStrategy;
 	private final TagTextExtractionStrategy tagTextExtractionStrategy;
-	
-	public ExtractionStrategy getExtractionStrategy(ExtractionStrategyType strategyType) {
+
+	public ExtractionStrategy setExtractionStrategy(ExtractionStrategyType strategyType) {
 		switch (strategyType){
 		case EXTRACTION_KOREAN:
 			return koreanWordExtractionStrategy;
@@ -25,6 +27,5 @@ public class ExtractionStrategyProvider {
 		default :
 			throw new CustomException(ErrorCode.FILE_STRATEGY_ERROR);
 		}
-		
 	}
 }

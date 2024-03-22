@@ -26,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 public class FileStructurePrinter {
 	
 	private final ExtractionStrategyProvider extractionStrategyProvider;
-	
+	private final CommentRemover commentRemover;
 	/***
 	 * 주어진 디렉토리의 파일 구조를 반환 하는 서비스
 	 * 
@@ -38,8 +38,10 @@ public class FileStructurePrinter {
 		ArrayList<String> fileStructure = new ArrayList<>();
 		try (Stream<Path> paths = Files.walk(directoryPath)) {
 			Path root = directoryPath;
-			paths.filter(Files::isRegularFile).map(path -> root.relativize(path)).map(Path::toString)
-					.forEach(filePath -> processFile(directoryPath, filePath, fileTypes, fileStructure, extractionStrategyType));
+			paths.filter(Files::isRegularFile)
+				 .map(path -> root.relativize(path))
+				 .map(Path::toString)
+				 .forEach(filePath -> processFile(directoryPath, filePath, fileTypes, fileStructure, extractionStrategyType));
 			Collections.reverse(fileStructure);
 		} catch (IOException e) {
 			throw new CustomException(ErrorCode.FILE_STRUCTURE_ERROR);
@@ -87,8 +89,9 @@ public class FileStructurePrinter {
 	 */
 	private String appendInsertStatus(String filePath, Path directoryPath, FileType fileType, ExtractionStrategyType extractionStrategyType) {
 		String fileContent = getFileContent(directoryPath, filePath);
-		ExtractionStrategy extractionStrategy = extractionStrategyProvider.getExtractionStrategy(extractionStrategyType);
-		Set<String> words = extractionStrategy.extract(fileContent, fileType.getValue());
+		String contentWithoutComments = commentRemover.removeComments(fileContent, fileType.getValue());
+		ExtractionStrategy extractionStrategy = extractionStrategyProvider.setExtractionStrategy(extractionStrategyType);
+		Set<String> words = extractionStrategy.extract(contentWithoutComments);
 		if (search(directoryPath, filePath, words)) {
 			filePath += FileStatus._$INSERT;
 		}
