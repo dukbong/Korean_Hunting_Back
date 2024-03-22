@@ -14,11 +14,9 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import com.hangulhunting.Korean_Hunting.jwt.TokenProvider;
 import com.hangulhunting.Korean_Hunting.jwt.filter.JwtFilter;
 import com.hangulhunting.Korean_Hunting.jwt.handler.JwtAccessDeniedHandler;
 import com.hangulhunting.Korean_Hunting.jwt.handler.JwtAuthenticationEntryPoint;
-import com.hangulhunting.Korean_Hunting.repository.BlackListRepository;
 
 import lombok.RequiredArgsConstructor;
 

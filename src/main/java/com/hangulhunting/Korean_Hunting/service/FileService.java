@@ -10,8 +10,9 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.hangulhunting.Korean_Hunting.dto.FileType;
 import com.hangulhunting.Korean_Hunting.dto.ZipFile;
+import com.hangulhunting.Korean_Hunting.entity.enumpackage.FileConstants;
+import com.hangulhunting.Korean_Hunting.entity.enumpackage.FileType;
 import com.hangulhunting.Korean_Hunting.exception.CustomException;
 import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
 
@@ -25,17 +26,23 @@ public class FileService {
 	private final FileUnzipper fileUnzipper;
 	private final FileStructurePrinter fileStructurePrinter;
 
-	public ZipFile koreanSearch(MultipartFile file) {
+	/***
+	 * 사용자가 원하는 파일에서 원하는 내용을 찾아주는 서비스
+	 * 
+	 * @param file 사용자가 제공한 파일
+	 * @return 사용자가 원하는 내용이 포함된 파일 구조 및 텍스트
+	 */
+	public ZipFile searchInFile(MultipartFile file) {
 		UUID uid = UUID.randomUUID();
 		Path rootFolderPath = null;
 
 		try {
 			rootFolderPath = createRootFolder();
-			Path uuidFolderPath = Files.createDirectories(rootFolderPath.resolve(uid.toString()));
+			Path tempFolderPath = Files.createDirectories(rootFolderPath.resolve(uid.toString()));
 
-			ZipFile zip = processFileStructure(file, uuidFolderPath);
+			ZipFile zipFile = processFileStructure(file, tempFolderPath);
 
-			return zip;
+			return zipFile;
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new CustomException(ErrorCode.FILE_PROCESSING_ERROR);
@@ -44,31 +51,51 @@ public class FileService {
 		}
 	}
 
+	/***
+	 * 루트 폴더를 생성하는 서비스
+	 * 
+	 * @return 생성된 루트 폴더의 경로
+	 * @throws IOException 폴더 생성 중 오류 발생 시
+	 */
 	private Path createRootFolder() throws IOException {
 		Path currentWorkingPath = Paths.get(System.getProperty("user.dir"));
-		return currentWorkingPath.resolve("koreaHuntingFolder");
+		return currentWorkingPath.resolve(FileConstants.SERVICE_FILE_NAME.getValue());
 	}
 
-	private ZipFile processFileStructure(MultipartFile file, Path uuidFolderPath) throws IOException {
-		ZipFile zip = new ZipFile();
-		fileUnzipper.unzip(file.getInputStream(), uuidFolderPath);
-		ArrayList<String> result = fileStructurePrinter.printDirectory(uuidFolderPath, FileType.values());
-		zip.setDirectory(result);
-		Path wordAddFilePath = Files.list(uuidFolderPath)
-									.filter(path -> path.getFileName().toString().equals("text_package.txt"))
+	/***
+	 * 파일 구조를 처리하고 사용자가 원하는 내용을 찾는 서비스
+	 * 
+	 * @param file 사용자가 제공한 파일
+	 * @param tempFolderPath 파일 처리를 위한 임시 폴더 경로
+	 * @return 사용자가 원하는 내용이 포함된 파일 구조 및 텍스트
+	 * @throws IOException 파일 처리 중 오류 발생 시
+	 */
+	private ZipFile processFileStructure(MultipartFile file, Path tempFolderPath) throws IOException {
+		ZipFile zipFile = new ZipFile();
+		fileUnzipper.unzip(file.getInputStream(), tempFolderPath);
+		ArrayList<String> fileStructure = fileStructurePrinter.printDirectory(tempFolderPath, FileType.values());
+		zipFile.setDirectory(fileStructure);
+		Path wordAddFilePath = Files.list(tempFolderPath)
+									.filter(path -> path.getFileName().toString().equals(FileConstants.SERVICE_TEXT_FILE_NAME.getValue()))
 									.findFirst()
 									.orElse(null);
 		if (wordAddFilePath != null) {
 			byte[] fileContent = Files.readAllBytes(wordAddFilePath);
-			zip.setContent(fileContent);
+			zipFile.setContent(fileContent);
 		}
-		return zip;
+		return zipFile;
 	}
 
-	private void deleteRootFolder(Path rootFolderPath, UUID uid) {
+	/***
+	 * 생성된 루트 폴더를 삭제하는 서비스
+	 * 
+	 * @param rootFolderPath 루트 폴더의 경로
+	 * @param folderUid 폴더의 고유 ID
+	 */
+	private void deleteRootFolder(Path rootFolderPath, UUID folderUid) {
 		if (rootFolderPath != null) {
 			try {
-				fileDeleter.deleteFile(rootFolderPath.resolve(uid.toString()));
+				fileDeleter.deleteFile(rootFolderPath.resolve(folderUid.toString()));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

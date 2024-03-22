@@ -19,13 +19,13 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class FileDeleter {
-	
+
 	private final NotDeleteFolderRepository notDeleteFolderRepository;
-	
+
 	/***
-	 * Path에 있는 걸 삭제하는 서비스
-	 * - 매개변수로는 uuidFolderPath를 넣어주면 된다.
-	 * @param deleteFilePath
+	 * 지정된 경로의 파일을 삭제하는 서비스
+	 * 
+	 * @param deleteFilePath 삭제할 파일 또는 디렉토리의 경로
 	 */
 	public void deleteFile(Path deleteFilePath) {
 		try {
@@ -50,9 +50,18 @@ public class FileDeleter {
 						}
 					});
 		} catch (IOException e) {
-			NotDeleteFolder notDeleteFolder = NotDeleteFolder.builder().folderPath(deleteFilePath.toString()).build();
-			notDeleteFolderRepository.save(notDeleteFolder);
+			handleDeletionError(deleteFilePath);
 			e.printStackTrace();
 		}
+	}
+
+	/***
+	 * 파일 또는 디렉토리 삭제 중 발생한 오류를 처리하는 서비스
+	 * 
+	 * @param deleteFilePath 삭제 중 오류가 발생한 파일 또는 디렉토리의 경로
+	 */
+	private void handleDeletionError(Path deleteFilePath) {
+		NotDeleteFolder notDeleteFolder = NotDeleteFolder.builder().folderPath(deleteFilePath.toString()).build();
+		notDeleteFolderRepository.save(notDeleteFolder);
 	}
 }

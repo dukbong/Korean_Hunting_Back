@@ -22,10 +22,8 @@ import com.hangulhunting.Korean_Hunting.entity.UserEntity;
 import com.hangulhunting.Korean_Hunting.exception.CustomException;
 import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
 import com.hangulhunting.Korean_Hunting.jwt.etc.TokenETC;
-import com.hangulhunting.Korean_Hunting.repository.UserRepository;
 import com.hangulhunting.Korean_Hunting.service.BlackListService;
 import com.hangulhunting.Korean_Hunting.service.RefreshTokenService;
-import com.hangulhunting.Korean_Hunting.service.UserService;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;

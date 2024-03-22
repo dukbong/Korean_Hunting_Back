@@ -21,7 +21,7 @@ public class FileController {
 
 	@PostMapping("/upload")
 	public ResponseEntity<ZipFile> fileUpload(@RequestParam("file") MultipartFile file) {
-		ZipFile zipFile = fileService.koreanSearch(file);
+		ZipFile zipFile = fileService.searchInFile(file);
 		return ResponseEntity.ok().body(zipFile);
 	}
 }

@@ -12,132 +12,137 @@ import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 
-import com.hangulhunting.Korean_Hunting.dto.FileStatus;
-import com.hangulhunting.Korean_Hunting.dto.FileType;
+import com.hangulhunting.Korean_Hunting.entity.enumpackage.FileStatus;
+import com.hangulhunting.Korean_Hunting.entity.enumpackage.FileType;
 import com.hangulhunting.Korean_Hunting.exception.CustomException;
 import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class FileStructurePrinter {
 	
-	private final FileStructureMethod fileStructureMethod;
+	private final FilePrinterMethod fileStructureMethod;
 	
 	/***
-	 * 파일의 구조를 반환하는 서비스
-	 * @param uuidFolderPath
-	 * @param fileType
-	 * @return
+	 * 주어진 디렉토리의 파일 구조를 반환 하는 서비스
+	 * 
+	 * @param directoryPath 파일 구조를 출력할 디렉토리 경로
+	 * @param fileTypes 처리할 파일 유형
+	 * @return 파일 구조를 나타내는 문자열 목록
 	 */
-	public ArrayList<String> printDirectory(Path uuidFolderPath, FileType[] fileType) {
-		ArrayList<String> fileTree = new ArrayList<>();
+	public ArrayList<String> printDirectory(Path directoryPath, FileType[] fileTypes) {
+		ArrayList<String> fileStructure = new ArrayList<>();
 
-		try (Stream<Path> paths = Files.walk(uuidFolderPath)) {
-			Path root = uuidFolderPath;
+		try (Stream<Path> paths = Files.walk(directoryPath)) {
+			Path root = directoryPath;
 			paths.filter(Files::isRegularFile).map(path -> root.relativize(path)).map(Path::toString)
-					.forEach(filePath -> processFile(uuidFolderPath, filePath, fileType, fileTree));
-			Collections.reverse(fileTree);
+					.forEach(filePath -> processFile(directoryPath, filePath, fileTypes, fileStructure));
+			Collections.reverse(fileStructure);
 		} catch (IOException e) {
 			throw new CustomException(ErrorCode.FILE_STRUCTURE_ERROR);
 		}
-		return fileTree;
+		return fileStructure;
 	}
 
 	/***
-	 * 파일의 구조를 파악하는 서비스
-	 * @param uuidFolderPath
-	 * @param filePath
-	 * @param fileType
-	 * @param fileTree
+	 * 파일을 처리하여 파일 구조를 업데이트하는 서비스
+	 * 
+	 * @param directoryPath 처리 중인 디렉토리 경로
+	 * @param filePath 처리 중인 파일 경로
+	 * @param fileTypes 처리할 파일 유형
+	 * @param fileStructure 파일 구조를 나타내는 문자열 목록
 	 */
-	private void processFile(Path uuidFolderPath, String filePath, FileType[] fileType, ArrayList<String> fileTree) {
-		for (FileType type : fileType) {
+	private void processFile(Path directoryPath, String filePath, FileType[] fileTypes, ArrayList<String> fileStructure) {
+		for (FileType type : fileTypes) {
 			if (isFileType(filePath, type)) {
-				fileTree.add(appendInsertStatus(filePath, uuidFolderPath, type));
+				fileStructure.add(appendInsertStatus(filePath, directoryPath, type));
 				break;
 			}
 		}
 	}
 
 	/***
-	 * 파일의 타입이 처리가능한 타입인지 확인하는 서비스
-	 * @param filePath
-	 * @param fileType
-	 * @return
+	 * 파일의 유형이 지정된 유형과 일치하는지 확인하는 서비스
+	 * 
+	 * @param filePath 파일 경로
+	 * @param fileType 처리할 파일 유형
+	 * @return 파일의 유형이 일치하면 true를 반환하고, 그렇지 않으면 false를 반환합니다.
 	 */
 	private boolean isFileType(String filePath, FileType fileType) {
 		return filePath.endsWith(fileType.getValue());
 	}
 
 	/***
-	 * FileStructureMethod에서 정한 방법으로 문서를 구분하는 서비스
-	 * @param filePath
-	 * @param uuidFolderPath
-	 * @param fileType
-	 * @return
+	 * FilePrinterMethod를 사용하여 문서를 처리하고 삽입 상태를 추가하는 서비스
+	 * 
+	 * @param filePath 파일 경로
+	 * @param directoryPath 처리 중인 디렉토리 경로
+	 * @param fileType 처리할 파일 유형
+	 * @return 삽입 상태가 추가된 파일 경로
 	 */
-	private String appendInsertStatus(String filePath, Path uuidFolderPath, FileType fileType) {
-		String fileContent = getFileContent(uuidFolderPath, filePath);
+	private String appendInsertStatus(String filePath, Path directoryPath, FileType fileType) {
+		String fileContent = getFileContent(directoryPath, filePath);
 		Set<String> words = fileStructureMethod.extractKoreanWords(fileContent, fileType.getValue());
-		if (search(uuidFolderPath, filePath, words)) {
+		if (search(directoryPath, filePath, words)) {
 			filePath += FileStatus._$INSERT;
 		}
 		return filePath;
 	}
 
 	/***
-	 * 파일을 읽어서 문자열로 저장하는 서비스
-	 * @param uuidFolderPath
-	 * @param targetFile
-	 * @return
+	 * 파일의 내용을 문자열로 읽어오는 서비스
+	 * 
+	 * @param directoryPath 처리 중인 디렉토리 경로
+	 * @param fileName 처리 중인 파일 경로
+	 * @return 파일의 내용을 나타내는 문자열
 	 */
-	public String getFileContent(Path uuidFolderPath, String targetFile) {
-		StringBuilder sb = new StringBuilder();
-		Path checkFilePath = uuidFolderPath.resolve(targetFile);
+	private String getFileContent(Path directoryPath, String fileName) {
+		StringBuilder fileContentBuilder = new StringBuilder();
+		Path checkFilePath = directoryPath.resolve(fileName);
 		try (Stream<String> lines = Files.lines(checkFilePath)) {
-			lines.forEach(line -> sb.append(line).append("\n"));
+			lines.forEach(line -> fileContentBuilder.append(line).append("\n"));
 		} catch (IOException e) {
 			throw new CustomException(ErrorCode.FILE_READ_ERROR);
 		}
-		return sb.toString();
+		return fileContentBuilder.toString();
 	}
 
 	/***
-	 * FileStructureMethod의 방법으로 찾은게 있는지 확인하는 서비스
-	 * @param uuidFolderPath
-	 * @param targetFile
-	 * @param words
-	 * @return
+	 * 주어진 단어 목록이 비어있지 않으면 검색 결과를 확인하고 파일에 저장하는 서비스
+	 * 
+	 * @param directoryPath 검색 중인 디렉토리 경로
+	 * @param fileName 검색 중인 파일 경로
+	 * @param words 검색된 단어의 집합
+	 * @return 검색된 단어가 있으면 true, 그렇지 않으면 false를 반환합니다.
 	 */
-	private boolean search(Path uuidFolderPath, String targetFile, Set<String> words) {
+	private boolean search(Path directoryPath, String fileName, Set<String> words) {
 		if (!words.isEmpty()) {
-			searchFileWrite(words, uuidFolderPath, targetFile);
+			writeSearchResultToFile(words, directoryPath, fileName);
 			return true;
 		}
 		return false;
 	}
 
 	/***
-	 * FileStructureMethod의 방법으로 찾은 글자를 파일로 저장하는 서비스
-	 * @param words
-	 * @param uuidFolderPath
-	 * @param targetFile
+	 * FilePrinterMethod를 사용하여 검색 결과를 확인하고 파일로 저장하는 서비스
+	 * 
+	 * @param words 검색 결과로 발견된 한글 단어 집합
+	 * @param directoryPath 처리 중인 디렉토리 경로
+	 * @param fileName 처리 중인 파일 경로
 	 */
-	private void searchFileWrite(Set<String> words, Path uuidFolderPath, String targetFile) {
+	private void writeSearchResultToFile(Set<String> words, Path directoryPath, String fileName) {
 		if (!words.isEmpty()) {
-			StringBuilder sb = new StringBuilder();
-			String koreanFilePath = uuidFolderPath.resolve("text_package.txt").toString();
+			StringBuilder contentBuilder = new StringBuilder();
+			String koreanFilePath = directoryPath.resolve("text_package.txt").toString();
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(koreanFilePath, true));) {
-				bw.write(targetFile + "\n");
+				bw.write(fileName + "\n");
 				int index = 1;
 				for (String word : words) {
-					sb.append(index++).append(". ").append(word).append("\n");
+					contentBuilder.append(index++).append(". ").append(word).append("\n");
 				}
-				bw.write(sb.toString());
+				bw.write(contentBuilder.toString());
 			} catch (IOException e) {
 				throw new CustomException(ErrorCode.FILE_WRITE_ERROR);
 			}

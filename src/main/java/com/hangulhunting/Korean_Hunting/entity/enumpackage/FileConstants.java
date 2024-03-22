@@ -1,18 +1,14 @@
-package com.hangulhunting.Korean_Hunting.dto;
+package com.hangulhunting.Korean_Hunting.entity.enumpackage;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public enum FileType {
+public enum FileConstants {
 	
-	JSP(".jsp"), 
-	PYTHON(".py"),
-	CS(".cs"),
-	JAVA(".java"),
-	JS(".js"),
-	HTML(".html");
+	SERVICE_FILE_NAME("koreaHuntingFolder"), 
+	SERVICE_TEXT_FILE_NAME("text_package.txt");
 
     private final String value;
 

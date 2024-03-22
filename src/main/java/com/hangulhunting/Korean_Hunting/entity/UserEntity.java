@@ -1,7 +1,6 @@
 package com.hangulhunting.Korean_Hunting.entity;
 
 import com.hangulhunting.Korean_Hunting.entity.enumpackage.UserRole;
-import com.hangulhunting.Korean_Hunting.jwt.filter.JwtFilter;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,7 +9,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.SequenceGenerator;
 import lombok.AccessLevel;

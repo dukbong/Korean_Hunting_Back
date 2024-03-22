@@ -2,7 +2,6 @@ package com.hangulhunting.Korean_Hunting.dto;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -7,7 +7,8 @@ import lombok.Getter;
 @Getter
 public class CustomException extends RuntimeException {
 
-    private final ErrorCode errorCode;
+	private static final long serialVersionUID = -6458499530147326804L;
+	private final ErrorCode errorCode;
 
     // ErrorCode 대신에, 여기서 throw~ 함수 만들기
 

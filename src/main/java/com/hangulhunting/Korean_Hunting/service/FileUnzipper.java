@@ -18,9 +18,10 @@ import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
 public class FileUnzipper {
 
 	/***
-	 * zip 파일 압축해제 하는 서비스
-	 * @param fileInputStream
-	 * @param outputPath
+	 * 주어진 InputStream으로부터 zip 파일을 압축 해제하는 서비스
+	 * 
+	 * @param fileInputStream zip 파일의 입력 스트림
+	 * @param outputPath      압축 해제된 파일을 저장할 경로
 	 */
 	public void unzip(InputStream fileInputStream, Path outputPath) {
 		try (ZipInputStream zipInputStream = new ZipInputStream(new BufferedInputStream(fileInputStream))) {
@@ -41,9 +42,10 @@ public class FileUnzipper {
 	}
 
 	/***
-	 * 파일 만드는 서비스 
-	 * @param inputStream
-	 * @param targetPath
+	 * 주어진 입력 스트림으로부터 파일을 생성하는 서비스
+	 * 
+	 * @param inputStream 생성할 파일의 입력 스트림
+	 * @param targetPath 생성할 파일의 경로
 	 */
 	public void createFile(InputStream inputStream, Path targetPath) {
 		try {
