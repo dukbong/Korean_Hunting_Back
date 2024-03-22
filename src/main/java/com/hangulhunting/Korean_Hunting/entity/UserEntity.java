@@ -29,6 +29,7 @@ public class UserEntity {
 	private String userId;
 	@Column(nullable = false)
 	private String userPwd;
+	@Column(nullable = false)
 	private String email;
 	private String company;
 	@Enumerated(EnumType.STRING)

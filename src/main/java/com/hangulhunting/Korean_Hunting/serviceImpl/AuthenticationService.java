@@ -1,4 +1,4 @@
-package com.hangulhunting.Korean_Hunting.service;
+package com.hangulhunting.Korean_Hunting.serviceImpl;
 
 import java.util.Optional;
 
@@ -45,6 +45,13 @@ public class AuthenticationService {
 		return buildTokenDto(tokenDto, refreshToken);
 	}
 
+	/**
+	 * RefreshToken을 처리하는 서비스
+	 * 
+	 * @param authentication 사용자 인증 정보
+	 * @param tokenDto 토큰 DTO
+	 * @return 처리된 RefreshToken 객체
+	 */
 	private RefreshToken handleRefreshToken(Authentication authentication, TokenDto tokenDto) {
 		UserEntity userEntity = findUserEntity(authentication);
 	    Optional<RefreshToken> optionalRefreshToken = Optional.ofNullable(userEntity.getRefreshToken());
@@ -55,6 +62,13 @@ public class AuthenticationService {
 	    return optionalRefreshToken.orElseGet(() -> saveRefreshToken(tokenDto, userEntity));
 	}
 	
+	/**
+	 * 새로운 RefreshToken을 저장하는 메소드입니다.
+	 * 
+	 * @param tokenDto 토큰 DTO
+	 * @param userEntity 사용자 엔터티
+	 * @return 저장된 RefreshToken 객체
+	 */
 	private RefreshToken saveRefreshToken(TokenDto tokenDto, UserEntity userEntity) {
 	    RefreshToken newRefreshToken = RefreshToken.builder()
 										           .value(tokenDto.getRefreshToken())
@@ -64,11 +78,24 @@ public class AuthenticationService {
 	    return newRefreshToken;
 	}
 	
+	/**
+	 * 사용자 엔터티를 찾는 메소드입니다.
+	 * 
+	 * @param authentication 사용자 인증 정보
+	 * @return 찾은 사용자 엔터티
+	 * @throws CustomException 사용자를 찾지 못했을 때 발생하는 예외
+	 */
 	private UserEntity findUserEntity(Authentication authentication) {
 	    return userRepository.findByUserId(authentication.getName())
 	            .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND_INFO));
 	}
 	
+	/**
+	 * 사용자를 인증하는 메소드입니다.
+	 * 
+	 * @param user 사용자 정보
+	 * @return 인증된 Authentication 객체
+	 */
 	private Authentication authenticateUser(User user) {
 		// 1. id / pw 기반으로 authenticationToken 생성
 		UsernamePasswordAuthenticationToken authenticationToken = user.toAuthentication();
@@ -76,11 +103,24 @@ public class AuthenticationService {
 		// authenticate 메소드가 실행시 CustomUserDetailsService에서 만들었던 loadUserByUsername 실행
 		return authenticationManagerBuilder.getObject().authenticate(authenticationToken);
 	}
-
+	
+	/**
+	 * 토큰을 생성하는 메소드입니다.
+	 * 
+	 * @param authentication 사용자 인증 정보
+	 * @return 생성된 TokenDto 객체
+	 */
 	private TokenDto generateToken(Authentication authentication) {
 		return tokenProvider.generateTokenDto(authentication);
 	}
-
+	
+	/**
+	 * TokenDto를 생성하는 메소드입니다.
+	 * 
+	 * @param tokenDto 토큰 DTO
+	 * @param refreshToken 새로운 RefreshToken 객체
+	 * @return 생성된 TokenDto 객체
+	 */
 	private TokenDto buildTokenDto(TokenDto tokenDto, RefreshToken refreshToken) {
 		return TokenDto.builder().grantType(tokenDto.getGrantType()).accessToken(tokenDto.getAccessToken())
 				.tokenExpiresIn(tokenDto.getTokenExpiresIn()).refreshToken(refreshToken.getValue()).build();

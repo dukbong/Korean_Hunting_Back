@@ -1,4 +1,4 @@
-package com.hangulhunting.Korean_Hunting.service;
+package com.hangulhunting.Korean_Hunting.serviceImpl;
 
 import java.util.Optional;
 

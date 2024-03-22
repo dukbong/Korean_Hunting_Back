@@ -8,7 +8,12 @@ import lombok.NoArgsConstructor;
 
 
 /***
- * 로그인 시 사용할 DTO 
+ * 로그인 정보를 담는 DTO
+ * 
+ * @field userId, userPwd, email, company
+ * @method getter, toAuthentication
+ * @constructor Builder
+ * 
  */
 @NoArgsConstructor
 @Getter

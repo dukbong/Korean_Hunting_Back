@@ -13,8 +13,8 @@ import com.hangulhunting.Korean_Hunting.dto.token.TokenDto;
 import com.hangulhunting.Korean_Hunting.entity.RefreshToken;
 import com.hangulhunting.Korean_Hunting.jwt.TokenProvider;
 import com.hangulhunting.Korean_Hunting.jwt.etc.TokenETC;
-import com.hangulhunting.Korean_Hunting.service.BlackListService;
-import com.hangulhunting.Korean_Hunting.service.RefreshTokenService;
+import com.hangulhunting.Korean_Hunting.serviceImpl.BlackListService;
+import com.hangulhunting.Korean_Hunting.serviceImpl.RefreshTokenService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

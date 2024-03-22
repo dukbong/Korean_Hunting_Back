@@ -22,8 +22,8 @@ import com.hangulhunting.Korean_Hunting.entity.UserEntity;
 import com.hangulhunting.Korean_Hunting.exception.CustomException;
 import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
 import com.hangulhunting.Korean_Hunting.jwt.etc.TokenETC;
-import com.hangulhunting.Korean_Hunting.service.BlackListService;
-import com.hangulhunting.Korean_Hunting.service.RefreshTokenService;
+import com.hangulhunting.Korean_Hunting.serviceImpl.BlackListService;
+import com.hangulhunting.Korean_Hunting.serviceImpl.RefreshTokenService;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -53,7 +53,12 @@ public class TokenProvider {
         this.refreshTokenService = refreshTokenService;
     }
 	
-	// 토큰 생성
+    /**
+     * 인증 정보를 기반으로 JWT 토큰을 생성하여 반환하는 메소드
+     * 
+     * @param authentication 인증 정보
+     * @return 생성된 토큰 정보가 담긴 객체
+     */
 	public TokenDto generateTokenDto(Authentication authentication) {
 		String authorities = authentication.getAuthorities().stream()
 										   .map(GrantedAuthority::getAuthority)
@@ -81,7 +86,12 @@ public class TokenProvider {
 					   .build();
 	}
 	
-	// 인증 권한 정보 가져오기
+    /**
+     * JWT 토큰을 파싱하여 인증 객체를 반환하는 메소드
+     * 
+     * @param accessToken 파싱할 JWT 토큰
+     * @return 인증 객체
+     */
 	public Authentication getAuthentication(String accessToken) {
 		Claims claims = parseClaims(accessToken);
 		
@@ -99,6 +109,12 @@ public class TokenProvider {
 		return new UsernamePasswordAuthenticationToken(principal, "", authorities);
 	}
 	
+    /**
+     * 주어진 JWT 토큰에서 클레임을 파싱하는 메소드
+     * 
+     * @param accessToken 파싱할 JWT 토큰
+     * @return 파싱된 클레임
+     */
     private Claims parseClaims(String accessToken) {
         try {
             return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(accessToken).getBody();
@@ -107,7 +123,12 @@ public class TokenProvider {
         }
     }
     
-    // 유효성 검사
+    /**
+     * JWT 토큰의 유효성을 검사하는 메소드
+     * 
+     * @param token 검사할 JWT 토큰
+     * @return 유효성 여부
+     */
     public boolean validateToken(String token) {
     	try {
     		Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
@@ -129,7 +150,12 @@ public class TokenProvider {
     	return false;
     }
     
-    // 만료 10분전인 토큰으로 요청시 새로운 토큰 발급 ( 중단 되지 않도록 하기 위함 )
+    /**
+     * 토큰의 만료 시간이 만료 20분 전인지 확인하는 메소드
+     * 
+     * @param token 확인할 토큰
+     * @return 토큰의 만료 시간이 재발급 시간 이전이면 true, 그렇지 않으면 false를 반환합니다.
+     */
     public boolean reissuanceTimeCheck(String token) {
     	Claims claims = parseClaims(token);
     	Date expirationDate = claims.getExpiration();
@@ -138,6 +164,12 @@ public class TokenProvider {
     	return expirationDate.getTime() - now.getTime() > maxreissuanceTime;
     }
 
+    /**
+     * 리프레시 토큰을 이용하여 새로운 엑세스 토큰을 발급하는 메소드
+     * 
+     * @param refreshToken 새로 발급할 토큰의 리프레시 토큰
+     * @return 새로 발급된 엑세스 토큰 정보를 포함한 토큰 DTO 객체를 반환합니다.
+     */
     @Transactional
 	public TokenDto refreshGenerateTokenDto(String refreshToken) {
 		Optional<RefreshToken>tokenInfo = refreshTokenService.findByValue(refreshToken);

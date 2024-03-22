@@ -1,4 +1,4 @@
-package com.hangulhunting.Korean_Hunting.service;
+package com.hangulhunting.Korean_Hunting.serviceImpl;
 
 import org.springframework.stereotype.Service;
 

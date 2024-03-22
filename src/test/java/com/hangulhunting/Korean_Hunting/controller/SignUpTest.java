@@ -17,7 +17,7 @@ import com.hangulhunting.Korean_Hunting.dto.response.UserResDto;
 import com.hangulhunting.Korean_Hunting.exception.CustomException;
 import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
 import com.hangulhunting.Korean_Hunting.repository.UserRepository;
-import com.hangulhunting.Korean_Hunting.service.RegisterUserService;
+import com.hangulhunting.Korean_Hunting.serviceImpl.RegisterUserService;
 
 @ExtendWith(MockitoExtension.class)
 public class SignUpTest {

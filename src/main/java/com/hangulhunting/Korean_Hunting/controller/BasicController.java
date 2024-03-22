@@ -12,8 +12,8 @@ import com.hangulhunting.Korean_Hunting.dto.User;
 import com.hangulhunting.Korean_Hunting.dto.response.UserResDto;
 import com.hangulhunting.Korean_Hunting.dto.token.TokenDto;
 import com.hangulhunting.Korean_Hunting.jwt.etc.TokenETC;
-import com.hangulhunting.Korean_Hunting.service.AuthenticationService;
-import com.hangulhunting.Korean_Hunting.service.RegisterUserService;
+import com.hangulhunting.Korean_Hunting.serviceImpl.AuthenticationService;
+import com.hangulhunting.Korean_Hunting.serviceImpl.RegisterUserService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;

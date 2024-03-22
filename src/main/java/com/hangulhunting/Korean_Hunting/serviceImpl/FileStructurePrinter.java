@@ -1,4 +1,4 @@
-package com.hangulhunting.Korean_Hunting.service;
+package com.hangulhunting.Korean_Hunting.serviceImpl;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -12,10 +12,12 @@ import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 
+import com.hangulhunting.Korean_Hunting.entity.enumpackage.ExtractionStrategyType;
 import com.hangulhunting.Korean_Hunting.entity.enumpackage.FileStatus;
 import com.hangulhunting.Korean_Hunting.entity.enumpackage.FileType;
 import com.hangulhunting.Korean_Hunting.exception.CustomException;
 import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
+import com.hangulhunting.Korean_Hunting.service.ExtractionStrategy;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class FileStructurePrinter {
 	
-	private final FilePrinterMethod fileStructureMethod;
+	private final ExtractionStrategyProvider extractionStrategyProvider;
 	
 	/***
 	 * 주어진 디렉토리의 파일 구조를 반환 하는 서비스
@@ -32,13 +34,12 @@ public class FileStructurePrinter {
 	 * @param fileTypes 처리할 파일 유형
 	 * @return 파일 구조를 나타내는 문자열 목록
 	 */
-	public ArrayList<String> printDirectory(Path directoryPath, FileType[] fileTypes) {
+	public ArrayList<String> printDirectory(Path directoryPath, FileType[] fileTypes, ExtractionStrategyType extractionStrategyType) {
 		ArrayList<String> fileStructure = new ArrayList<>();
-
 		try (Stream<Path> paths = Files.walk(directoryPath)) {
 			Path root = directoryPath;
 			paths.filter(Files::isRegularFile).map(path -> root.relativize(path)).map(Path::toString)
-					.forEach(filePath -> processFile(directoryPath, filePath, fileTypes, fileStructure));
+					.forEach(filePath -> processFile(directoryPath, filePath, fileTypes, fileStructure, extractionStrategyType));
 			Collections.reverse(fileStructure);
 		} catch (IOException e) {
 			throw new CustomException(ErrorCode.FILE_STRUCTURE_ERROR);
@@ -53,11 +54,12 @@ public class FileStructurePrinter {
 	 * @param filePath 처리 중인 파일 경로
 	 * @param fileTypes 처리할 파일 유형
 	 * @param fileStructure 파일 구조를 나타내는 문자열 목록
+	 * @param extractionStrategyType 
 	 */
-	private void processFile(Path directoryPath, String filePath, FileType[] fileTypes, ArrayList<String> fileStructure) {
+	private void processFile(Path directoryPath, String filePath, FileType[] fileTypes, ArrayList<String> fileStructure, ExtractionStrategyType extractionStrategyType) {
 		for (FileType type : fileTypes) {
 			if (isFileType(filePath, type)) {
-				fileStructure.add(appendInsertStatus(filePath, directoryPath, type));
+				fileStructure.add(appendInsertStatus(filePath, directoryPath, type, extractionStrategyType));
 				break;
 			}
 		}
@@ -80,11 +82,13 @@ public class FileStructurePrinter {
 	 * @param filePath 파일 경로
 	 * @param directoryPath 처리 중인 디렉토리 경로
 	 * @param fileType 처리할 파일 유형
+	 * @param extractionStrategyType 
 	 * @return 삽입 상태가 추가된 파일 경로
 	 */
-	private String appendInsertStatus(String filePath, Path directoryPath, FileType fileType) {
+	private String appendInsertStatus(String filePath, Path directoryPath, FileType fileType, ExtractionStrategyType extractionStrategyType) {
 		String fileContent = getFileContent(directoryPath, filePath);
-		Set<String> words = fileStructureMethod.extractKoreanWords(fileContent, fileType.getValue());
+		ExtractionStrategy extractionStrategy = extractionStrategyProvider.getExtractionStrategy(extractionStrategyType);
+		Set<String> words = extractionStrategy.extract(fileContent, fileType.getValue());
 		if (search(directoryPath, filePath, words)) {
 			filePath += FileStatus._$INSERT;
 		}

@@ -1,4 +1,4 @@
-package com.hangulhunting.Korean_Hunting.service;
+package com.hangulhunting.Korean_Hunting.serviceImpl;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -11,10 +11,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.hangulhunting.Korean_Hunting.dto.ZipFile;
+import com.hangulhunting.Korean_Hunting.entity.enumpackage.ExtractionStrategyType;
 import com.hangulhunting.Korean_Hunting.entity.enumpackage.FileConstants;
 import com.hangulhunting.Korean_Hunting.entity.enumpackage.FileType;
 import com.hangulhunting.Korean_Hunting.exception.CustomException;
 import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
+import com.hangulhunting.Korean_Hunting.service.ExtractionStrategy;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,22 +27,21 @@ public class FileService {
 	private final FileDeleter fileDeleter;
 	private final FileUnzipper fileUnzipper;
 	private final FileStructurePrinter fileStructurePrinter;
-
 	/***
 	 * 사용자가 원하는 파일에서 원하는 내용을 찾아주는 서비스
 	 * 
 	 * @param file 사용자가 제공한 파일
+	 * @param extractionStrategyType 파일에 적용할 전략
 	 * @return 사용자가 원하는 내용이 포함된 파일 구조 및 텍스트
 	 */
-	public ZipFile searchInFile(MultipartFile file) {
+	public ZipFile searchInFile(MultipartFile file, ExtractionStrategyType extractionStrategyType) {
 		UUID uid = UUID.randomUUID();
 		Path rootFolderPath = null;
 
 		try {
 			rootFolderPath = createRootFolder();
 			Path tempFolderPath = Files.createDirectories(rootFolderPath.resolve(uid.toString()));
-
-			ZipFile zipFile = processFileStructure(file, tempFolderPath);
+			ZipFile zipFile = processFileStructure(file, tempFolderPath, extractionStrategyType);
 
 			return zipFile;
 		} catch (IOException e) {
@@ -67,13 +68,14 @@ public class FileService {
 	 * 
 	 * @param file 사용자가 제공한 파일
 	 * @param tempFolderPath 파일 처리를 위한 임시 폴더 경로
+	 * @param extractionStrategyType 파일에 적용할 전략
 	 * @return 사용자가 원하는 내용이 포함된 파일 구조 및 텍스트
 	 * @throws IOException 파일 처리 중 오류 발생 시
 	 */
-	private ZipFile processFileStructure(MultipartFile file, Path tempFolderPath) throws IOException {
+	private ZipFile processFileStructure(MultipartFile file, Path tempFolderPath, ExtractionStrategyType extractionStrategyType) throws IOException {
 		ZipFile zipFile = new ZipFile();
 		fileUnzipper.unzip(file.getInputStream(), tempFolderPath);
-		ArrayList<String> fileStructure = fileStructurePrinter.printDirectory(tempFolderPath, FileType.values());
+		ArrayList<String> fileStructure = fileStructurePrinter.printDirectory(tempFolderPath, FileType.values(), extractionStrategyType);
 		zipFile.setDirectory(fileStructure);
 		Path wordAddFilePath = Files.list(tempFolderPath)
 									.filter(path -> path.getFileName().toString().equals(FileConstants.SERVICE_TEXT_FILE_NAME.getValue()))

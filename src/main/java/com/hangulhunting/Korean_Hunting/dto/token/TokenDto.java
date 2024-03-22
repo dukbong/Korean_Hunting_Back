@@ -4,9 +4,6 @@ import lombok.Builder;
 import lombok.Getter;
 
 
-/***
- * 필요 없어 보이기 때문에 삭제 예정
- */
 @Getter
 @Builder
 public class TokenDto {
