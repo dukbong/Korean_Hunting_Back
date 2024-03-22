@@ -38,11 +38,11 @@ public class AuthenticationService {
 	 * @param user 로그인할 사용자 정보
 	 * @return 로그인 결과와 JWT 토큰 정보
 	 */
-	public TokenDto loginProcess(User user) {
+	public String loginProcess(User user) {
 		Authentication authentication = authenticateUser(user);
 		TokenDto tokenDto = generateToken(authentication);
-		RefreshToken refreshToken = handleRefreshToken(authentication, tokenDto);
-		return buildTokenDto(tokenDto, refreshToken);
+		handleRefreshToken(authentication, tokenDto);
+		return tokenDto.getAccessToken();
 	}
 
 	/**
@@ -50,16 +50,15 @@ public class AuthenticationService {
 	 * 
 	 * @param authentication 사용자 인증 정보
 	 * @param tokenDto 토큰 DTO
-	 * @return 처리된 RefreshToken 객체
 	 */
-	private RefreshToken handleRefreshToken(Authentication authentication, TokenDto tokenDto) {
+	private void handleRefreshToken(Authentication authentication, TokenDto tokenDto) {
 		UserEntity userEntity = findUserEntity(authentication);
 	    Optional<RefreshToken> optionalRefreshToken = Optional.ofNullable(userEntity.getRefreshToken());
 	    if (optionalRefreshToken.isPresent() && !tokenProvider.validateToken(optionalRefreshToken.get().getValue())) {
 	   		refreshTokenService.deleteByValue(optionalRefreshToken.get().getValue());
-	   		return saveRefreshToken(tokenDto, userEntity);
+	   		saveRefreshToken(tokenDto, userEntity);
 	    }
-	    return optionalRefreshToken.orElseGet(() -> saveRefreshToken(tokenDto, userEntity));
+	    optionalRefreshToken.orElseGet(() -> saveRefreshToken(tokenDto, userEntity));
 	}
 	
 	/**
@@ -114,18 +113,6 @@ public class AuthenticationService {
 		return tokenProvider.generateTokenDto(authentication);
 	}
 	
-	/**
-	 * TokenDto를 생성하는 메소드입니다.
-	 * 
-	 * @param tokenDto 토큰 DTO
-	 * @param refreshToken 새로운 RefreshToken 객체
-	 * @return 생성된 TokenDto 객체
-	 */
-	private TokenDto buildTokenDto(TokenDto tokenDto, RefreshToken refreshToken) {
-		return TokenDto.builder().grantType(tokenDto.getGrantType()).accessToken(tokenDto.getAccessToken())
-				.tokenExpiresIn(tokenDto.getTokenExpiresIn()).refreshToken(refreshToken.getValue()).build();
-	}
-
 	/**
 	 * 현재 인증된 사용자의 정보를 가져오는 서비스
 	 * 

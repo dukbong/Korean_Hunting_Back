@@ -26,11 +26,11 @@ public class BasicController {
 	private final AuthenticationService authenticationService;
 
 	@PostMapping("/login")
-	public ResponseEntity<TokenDto> login(@RequestBody User user) {
-		TokenDto tokenDto = authenticationService.loginProcess(user);
+	public ResponseEntity<String> login(@RequestBody User user) {
+		String loginResult = authenticationService.loginProcess(user);
 		HttpHeaders header = new HttpHeaders();
-		header.add(TokenETC.AUTHORIZATION, TokenETC.PREFIX + tokenDto.getAccessToken());
-		return ResponseEntity.ok().headers(header).body(tokenDto);
+		header.add(TokenETC.AUTHORIZATION, TokenETC.PREFIX + loginResult);
+		return ResponseEntity.ok().headers(header).body("Login Success");
 	}
 
 	@GetMapping("/logout")
