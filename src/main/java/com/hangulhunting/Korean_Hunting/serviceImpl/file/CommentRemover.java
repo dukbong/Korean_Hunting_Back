@@ -1,8 +1,8 @@
-package com.hangulhunting.Korean_Hunting.serviceImpl;
+package com.hangulhunting.Korean_Hunting.serviceImpl.file;
 
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-@Service
+@Component
 public class CommentRemover {
 	/***
 	 * 파일 내의 주석을 제거하는 서비스

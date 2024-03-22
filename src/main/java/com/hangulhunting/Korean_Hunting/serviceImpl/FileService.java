@@ -16,7 +16,9 @@ import com.hangulhunting.Korean_Hunting.entity.enumpackage.FileConstants;
 import com.hangulhunting.Korean_Hunting.entity.enumpackage.FileType;
 import com.hangulhunting.Korean_Hunting.exception.CustomException;
 import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
-import com.hangulhunting.Korean_Hunting.service.ExtractionStrategy;
+import com.hangulhunting.Korean_Hunting.serviceImpl.file.FileDeleter;
+import com.hangulhunting.Korean_Hunting.serviceImpl.file.FileStructurePrinter;
+import com.hangulhunting.Korean_Hunting.serviceImpl.file.FileUnzipper;
 
 import lombok.RequiredArgsConstructor;
 

@@ -1,4 +1,4 @@
-package com.hangulhunting.Korean_Hunting.serviceImpl;
+package com.hangulhunting.Korean_Hunting.serviceImpl.file;
 
 import java.io.IOException;
 import java.nio.file.FileVisitOption;
@@ -9,14 +9,14 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
 
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import com.hangulhunting.Korean_Hunting.entity.NotDeleteFolder;
 import com.hangulhunting.Korean_Hunting.repository.NotDeleteFolderRepository;
 
 import lombok.RequiredArgsConstructor;
 
-@Service
+@Component
 @RequiredArgsConstructor
 public class FileDeleter {
 

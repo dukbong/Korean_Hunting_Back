@@ -1,4 +1,4 @@
-package com.hangulhunting.Korean_Hunting.serviceImpl;
+package com.hangulhunting.Korean_Hunting.serviceImpl.file;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -9,12 +9,12 @@ import java.nio.file.StandardCopyOption;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import com.hangulhunting.Korean_Hunting.exception.CustomException;
 import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
 
-@Service
+@Component
 public class FileUnzipper {
 
 	/***

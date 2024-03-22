@@ -1,4 +1,4 @@
-package com.hangulhunting.Korean_Hunting.serviceImpl;
+package com.hangulhunting.Korean_Hunting.serviceImpl.file;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import com.hangulhunting.Korean_Hunting.entity.enumpackage.ExtractionStrategyType;
 import com.hangulhunting.Korean_Hunting.entity.enumpackage.FileStatus;
@@ -21,7 +21,7 @@ import com.hangulhunting.Korean_Hunting.service.ExtractionStrategy;
 
 import lombok.RequiredArgsConstructor;
 
-@Service
+@Component
 @RequiredArgsConstructor
 public class FileStructurePrinter {
 	
