@@ -12,7 +12,8 @@ import com.hangulhunting.Korean_Hunting.dto.User;
 import com.hangulhunting.Korean_Hunting.dto.response.UserResDto;
 import com.hangulhunting.Korean_Hunting.dto.token.TokenDto;
 import com.hangulhunting.Korean_Hunting.jwt.etc.TokenETC;
-import com.hangulhunting.Korean_Hunting.service.UserService;
+import com.hangulhunting.Korean_Hunting.service.AuthenticationService;
+import com.hangulhunting.Korean_Hunting.service.RegisterUserService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -21,12 +22,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class BasicController {
 
-	private final UserService userService;
+	private final RegisterUserService userService;
+	private final AuthenticationService authenticationService;
 
 	@PostMapping("/login")
 	public ResponseEntity<TokenDto> login(@RequestBody User user) {
-		TokenDto tokenDto = userService.loginProcess(user);
-		// 헤더에 담기
+		TokenDto tokenDto = authenticationService.loginProcess(user);
 		HttpHeaders header = new HttpHeaders();
 		header.add(TokenETC.AUTHORIZATION, TokenETC.PREFIX + tokenDto.getAccessToken());
 		return ResponseEntity.ok().headers(header).body(tokenDto);
@@ -34,7 +35,7 @@ public class BasicController {
 
 	@GetMapping("/logout")
 	public void logout(HttpServletRequest request) {
-		userService.logoutProcess(request);
+		authenticationService.logoutProcess(request);
 	}
 
 	@PostMapping("/join")
@@ -45,7 +46,7 @@ public class BasicController {
 
 	@GetMapping("/info")
 	public ResponseEntity<Object> userInfo() {
-		User user = userService.userInfo();
+		User user = authenticationService.userInfo();
 		return ResponseEntity.ok().body(user);
 	}
 

@@ -1,22 +1,17 @@
 package com.hangulhunting.Korean_Hunting.service;
 
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.hangulhunting.Korean_Hunting.dto.User;
-import com.hangulhunting.Korean_Hunting.dto.response.UserResDto;
 import com.hangulhunting.Korean_Hunting.dto.token.TokenDto;
 import com.hangulhunting.Korean_Hunting.entity.RefreshToken;
 import com.hangulhunting.Korean_Hunting.entity.UserEntity;
-import com.hangulhunting.Korean_Hunting.entity.enumpackage.UserRole;
 import com.hangulhunting.Korean_Hunting.exception.CustomException;
 import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
 import com.hangulhunting.Korean_Hunting.jwt.TokenProvider;
@@ -29,73 +24,74 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class UserService {
+public class AuthenticationService {
 
-	private final UserRepository userRepository;
 	private final RefreshTokenService refreshTokenService;
 	private final BlackListService blackListService;
 	private final AuthenticationManagerBuilder authenticationManagerBuilder;
-	private final BCryptPasswordEncoder bCryptPasswordEncoder;
 	private final TokenProvider tokenProvider;
+	private final UserRepository userRepository;
 
-	public UserResDto registerUser(User user) {
-		validateUser(user);
-		UserEntity userEntity = UserEntity.builder()
-										  .userId(user.getUserId())
-										  .userPwd(bCryptPasswordEncoder.encode(user.getUserPwd()))
-										  .email(user.getEmail())
-										  .company(user.getCompany())
-										  .role(UserRole.ROLE_USER)
-										  .build();
-		userRepository.save(userEntity);
-		return new UserResDto("회원가입에 성공하였습니다.");
-	}
-
-	private void validateUser(User user) {
-		if (userRepository.existsByUserId(user.getUserId())) {
-			throw new CustomException(ErrorCode.NAME_ALREADY_EXISTS, user.getUserId());
-		}
-
-		if (isNullOrBlank(user.getUserId())) {
-			throw new CustomException(ErrorCode.MEMBER_IDS_IS_EMPTY_OR_NULL, user.getUserId());
-		}
-
-		if (isNullOrBlank(user.getUserPwd())) {
-			throw new CustomException(ErrorCode.MEMBER_PWD_IS_EMPTY_OR_NULL, user.getUserPwd());
-		}
-
-		if (isValidEmail(user.getEmail())) {
-			throw new CustomException(ErrorCode.INVALID_EMAIL, user.getEmail());
-		}
-	}
-
-	private boolean isNullOrBlank(String str) {
-		return str == null || str.isEmpty();
-	}
-
-	private boolean isValidEmail(String email) {
-		String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
-		Pattern pattern = Pattern.compile(emailRegex);
-		Matcher matcher = pattern.matcher(email);
-		return !matcher.matches();
-	}
-
+	/**
+	 * 사용자 로그인을 처리하는 서비스
+	 * 
+	 * @param user 로그인할 사용자 정보
+	 * @return 로그인 결과와 JWT 토큰 정보
+	 */
 	public TokenDto loginProcess(User user) {
+		Authentication authentication = authenticateUser(user);
+		TokenDto tokenDto = generateToken(authentication);
+		RefreshToken refreshToken = handleRefreshToken(authentication, tokenDto);
+		return buildTokenDto(tokenDto, refreshToken);
+	}
+
+	private RefreshToken handleRefreshToken(Authentication authentication, TokenDto tokenDto) {
+		UserEntity userEntity = findUserEntity(authentication);
+	    Optional<RefreshToken> optionalRefreshToken = Optional.ofNullable(userEntity.getRefreshToken());
+	    if (optionalRefreshToken.isPresent() && !tokenProvider.validateToken(optionalRefreshToken.get().getValue())) {
+	   		refreshTokenService.deleteByValue(optionalRefreshToken.get().getValue());
+	   		return saveRefreshToken(tokenDto, userEntity);
+	    }
+	    return optionalRefreshToken.orElseGet(() -> saveRefreshToken(tokenDto, userEntity));
+	}
+	
+	private RefreshToken saveRefreshToken(TokenDto tokenDto, UserEntity userEntity) {
+	    RefreshToken newRefreshToken = RefreshToken.builder()
+										           .value(tokenDto.getRefreshToken())
+										           .userEntity(userEntity)
+										           .build();
+	    refreshTokenService.save(newRefreshToken);
+	    return newRefreshToken;
+	}
+	
+	private UserEntity findUserEntity(Authentication authentication) {
+	    return userRepository.findByUserId(authentication.getName())
+	            .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND_INFO));
+	}
+	
+	private Authentication authenticateUser(User user) {
 		// 1. id / pw 기반으로 authenticationToken 생성
 		UsernamePasswordAuthenticationToken authenticationToken = user.toAuthentication();
 		// 2. 실제 검증 (비밀번호 체크)
 		// authenticate 메소드가 실행시 CustomUserDetailsService에서 만들었던 loadUserByUsername 실행
-		Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-		// 3. 인증 정보를 기반으로 jwt 생성
-		TokenDto tokenDto = tokenProvider.generateTokenDto(authentication);
-		// 4. refresh 토큰 저장
-		UserEntity loginUser = userRepository.findByUserId(authentication.getName()).get();
-		RefreshToken refreshToken = RefreshToken.builder().value(tokenDto.getRefreshToken()).userEntity(loginUser)
-				.build();
-		refreshTokenService.save(refreshToken);
-		return tokenDto;
+		return authenticationManagerBuilder.getObject().authenticate(authenticationToken);
 	}
 
+	private TokenDto generateToken(Authentication authentication) {
+		return tokenProvider.generateTokenDto(authentication);
+	}
+
+	private TokenDto buildTokenDto(TokenDto tokenDto, RefreshToken refreshToken) {
+		return TokenDto.builder().grantType(tokenDto.getGrantType()).accessToken(tokenDto.getAccessToken())
+				.tokenExpiresIn(tokenDto.getTokenExpiresIn()).refreshToken(refreshToken.getValue()).build();
+	}
+
+	/**
+	 * 현재 인증된 사용자의 정보를 가져오는 서비스
+	 * 
+	 * @return 현재 인증된 사용자 정보
+	 * @throws CustomException 인증된 사용자 정보를 찾을 수 없을 때 발생하는 예외
+	 */
 	public User userInfo() {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		String userId = authentication.getName();
@@ -106,6 +102,11 @@ public class UserService {
 		return user;
 	}
 
+	/**
+	 * 사용자 로그아웃을 처리하는 서비스
+	 * 
+	 * @param request HTTP 요청 객체
+	 */
 	@Transactional
 	public void logoutProcess(HttpServletRequest request) {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -119,5 +120,4 @@ public class UserService {
 			refreshTokenService.deleteByValue(userEntity.get().getRefreshToken().getValue());
 		}
 	}
-
 }

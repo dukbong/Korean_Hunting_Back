@@ -17,7 +17,7 @@ import com.hangulhunting.Korean_Hunting.dto.response.UserResDto;
 import com.hangulhunting.Korean_Hunting.exception.CustomException;
 import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
 import com.hangulhunting.Korean_Hunting.repository.UserRepository;
-import com.hangulhunting.Korean_Hunting.service.UserService;
+import com.hangulhunting.Korean_Hunting.service.RegisterUserService;
 
 @ExtendWith(MockitoExtension.class)
 public class SignUpTest {
@@ -29,7 +29,7 @@ public class SignUpTest {
 	BCryptPasswordEncoder bCryptPasswordEncoder;
 
 	@Mock
-	UserService userService;
+	RegisterUserService userService;
 
 	@InjectMocks
 	BasicController basicController;

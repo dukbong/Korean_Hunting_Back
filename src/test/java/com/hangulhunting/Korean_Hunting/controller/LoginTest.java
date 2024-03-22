@@ -13,7 +13,7 @@ import org.springframework.http.ResponseEntity;
 
 import com.hangulhunting.Korean_Hunting.dto.User;
 import com.hangulhunting.Korean_Hunting.dto.response.UserResDto;
-import com.hangulhunting.Korean_Hunting.service.UserService;
+import com.hangulhunting.Korean_Hunting.service.RegisterUserService;
 
 @ExtendWith(MockitoExtension.class)
 public class LoginTest {
