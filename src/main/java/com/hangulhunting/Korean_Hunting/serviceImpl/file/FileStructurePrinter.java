@@ -90,6 +90,7 @@ public class FileStructurePrinter {
 	private String appendInsertStatus(String filePath, Path directoryPath, FileType fileType, ExtractionStrategyType extractionStrategyType) {
 		String fileContent = getFileContent(directoryPath, filePath);
 		String contentWithoutComments = commentRemover.removeComments(fileContent, fileType.getValue());
+		// 전략 패턴 사용
 		ExtractionStrategy extractionStrategy = extractionStrategyProvider.setExtractionStrategy(extractionStrategyType);
 		Set<String> words = extractionStrategy.extract(contentWithoutComments);
 		if (search(directoryPath, filePath, words)) {
