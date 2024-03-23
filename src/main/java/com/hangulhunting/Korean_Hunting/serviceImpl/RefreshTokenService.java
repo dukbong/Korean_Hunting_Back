@@ -8,6 +8,7 @@ import com.hangulhunting.Korean_Hunting.entity.RefreshToken;
 import com.hangulhunting.Korean_Hunting.repository.RefreshTokenRepository;
 import com.hangulhunting.Korean_Hunting.repository.UserRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -17,6 +18,7 @@ public class RefreshTokenService {
 	private final RefreshTokenRepository refreshTokenRepository;
 	private final UserRepository userRepository;
 
+	@Transactional
 	public void deleteByValue(String token) {
 		refreshTokenRepository.deleteByValue(token);
 	}

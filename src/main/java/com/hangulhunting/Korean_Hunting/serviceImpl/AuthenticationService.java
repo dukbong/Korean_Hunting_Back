@@ -42,7 +42,7 @@ public class AuthenticationService {
 		Authentication authentication = authenticateUser(user);
 		TokenDto tokenDto = generateToken(authentication);
 		handleRefreshToken(authentication, tokenDto);
-		return tokenDto.getAccessToken();
+		return tokenDto.getAccessToken();	
 	}
 
 	/**

@@ -1,8 +1,10 @@
 package com.hangulhunting.Korean_Hunting.exception.handler;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import com.hangulhunting.Korean_Hunting.exception.CustomException;
 import com.hangulhunting.Korean_Hunting.exception.ErrorResponse;
@@ -27,5 +29,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(e.getHttpStatus())
                 .body(new ErrorResponse(e.getMessage(), e.toString()));
     }
+    
+//    @ExceptionHandler(MaxUploadSizeExceededException.class)
+//    public ResponseEntity<String> handleMaxSizeException(MaxUploadSizeExceededException exc) {
+//        return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED)
+//            .body("최대 허용 크기는 200MB입니다.");
+//    }
 
 }
