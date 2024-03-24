@@ -29,6 +29,9 @@ dependencies {
 	// https://mvnrepository.com/artifact/org.xerial.snappy/snappy-java >> 고속 압축
 	implementation 'org.xerial.snappy:snappy-java:1.1.10.5'
 	
+	// https://mvnrepository.com/artifact/org.jboss.windup.decompiler/decompiler-fernflower
+	compileOnly group: 'org.jboss.windup.decompiler', name: 'decompiler-fernflower', version: '6.3.6.Final'
+	
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'com.h2database:h2'
 //	runtimeOnly 'com.oracle.database.jdbc:ojdbc11'

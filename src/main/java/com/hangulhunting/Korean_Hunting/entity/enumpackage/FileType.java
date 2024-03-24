@@ -12,6 +12,8 @@ public enum FileType {
 	CS(".cs"),
 	JAVA(".java"),
 	JS(".js"),
+	JSX(".jsx"),
+	CSS(".css"),
 	HTML(".html");
 
     private final String value;
