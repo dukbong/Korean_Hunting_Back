@@ -9,6 +9,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.hangulhunting.Korean_Hunting.dto.User;
+import com.hangulhunting.Korean_Hunting.dto.UserInfo;
 import com.hangulhunting.Korean_Hunting.dto.token.TokenDto;
 import com.hangulhunting.Korean_Hunting.entity.RefreshToken;
 import com.hangulhunting.Korean_Hunting.entity.UserEntity;
@@ -95,7 +96,7 @@ public class AuthenticationService {
 	 * @param user 사용자 정보
 	 * @return 인증된 Authentication 객체
 	 */
-	private Authentication authenticateUser(User user) {
+	public Authentication authenticateUser(User user) {
 		// 1. id / pw 기반으로 authenticationToken 생성
 		UsernamePasswordAuthenticationToken authenticationToken = user.toAuthentication();
 		// 2. 실제 검증 (비밀번호 체크)
@@ -119,14 +120,18 @@ public class AuthenticationService {
 	 * @return 현재 인증된 사용자 정보
 	 * @throws CustomException 인증된 사용자 정보를 찾을 수 없을 때 발생하는 예외
 	 */
-	public User userInfo() {
+	public UserInfo userInfo() {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		String userId = authentication.getName();
 		UserEntity userEntity = userRepository.findByUserId(userId)
 				.orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND_INFO));
-		User user = User.builder().userId(userEntity.getUserId()).email(userEntity.getEmail())
-				.company(userEntity.getCompany()).build();
-		return user;
+		UserInfo userInfo = UserInfo.builder()
+								.userId(userEntity.getUserId())
+								.email(userEntity.getEmail())
+								.company(userEntity.getCompany())
+								.apiToken(userEntity.getApiTokenEntity().getApiToken())
+								.build();
+		return userInfo;
 	}
 
 	/**

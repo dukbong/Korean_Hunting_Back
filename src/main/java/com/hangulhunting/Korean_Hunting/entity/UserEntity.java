@@ -38,6 +38,9 @@ public class UserEntity {
 	@OneToOne(fetch = FetchType.LAZY, mappedBy = "userEntity")
 	private RefreshToken refreshToken;
 	
+	@OneToOne(fetch = FetchType.LAZY, mappedBy = "userEntity")
+	private ApiTokenEntity apiTokenEntity;
+	
 	@Builder
 	public UserEntity(Long id, String userId, String userPwd, String email, String company, UserRole role) {
 		super();

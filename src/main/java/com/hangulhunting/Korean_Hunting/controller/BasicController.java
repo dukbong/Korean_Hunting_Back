@@ -1,5 +1,7 @@
 package com.hangulhunting.Korean_Hunting.controller;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,8 +11,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hangulhunting.Korean_Hunting.dto.User;
+import com.hangulhunting.Korean_Hunting.dto.UserInfo;
 import com.hangulhunting.Korean_Hunting.dto.response.UserResDto;
-import com.hangulhunting.Korean_Hunting.dto.token.TokenDto;
 import com.hangulhunting.Korean_Hunting.jwt.etc.TokenETC;
 import com.hangulhunting.Korean_Hunting.serviceImpl.AuthenticationService;
 import com.hangulhunting.Korean_Hunting.serviceImpl.RegisterUserService;
@@ -46,8 +48,8 @@ public class BasicController {
 
 	@GetMapping("/info")
 	public ResponseEntity<Object> userInfo() {
-		User user = authenticationService.userInfo();
-		return ResponseEntity.ok().body(user);
+		UserInfo userInfo = authenticationService.userInfo();
+		return ResponseEntity.ok().body(userInfo);
 	}
 
 }

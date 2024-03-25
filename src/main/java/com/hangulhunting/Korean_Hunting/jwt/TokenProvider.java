@@ -23,6 +23,7 @@ import com.hangulhunting.Korean_Hunting.entity.UserEntity;
 import com.hangulhunting.Korean_Hunting.exception.CustomException;
 import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
 import com.hangulhunting.Korean_Hunting.jwt.etc.TokenETC;
+import com.hangulhunting.Korean_Hunting.repository.UserRepository;
 import com.hangulhunting.Korean_Hunting.serviceImpl.BlackListService;
 import com.hangulhunting.Korean_Hunting.serviceImpl.RefreshTokenService;
 
@@ -87,6 +88,19 @@ public class TokenProvider {
 					   .refreshToken(refreshToken)
 					   .build();
 	}
+	
+	public String apigenerateToken(Authentication authentication) {
+		long now = (new Date()).getTime();
+		Date tokenExpiresIn = new Date(now + TokenETC.API_TOKEN_EXPIRE_TIME);
+		return Jwts.builder()
+				   .setSubject(authentication.getName())
+				   .claim(TokenETC.AUTHORITIES_KEY, "API")
+				   .setExpiration(tokenExpiresIn)
+				   .signWith(key, SignatureAlgorithm.HS512)
+				   .compact();
+	}
+	
+	
 	
     /**
      * JWT 토큰을 파싱하여 인증 객체를 반환하는 메소드

@@ -47,3 +47,15 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+
+
+
+task koreanCheck {
+    doLast  {
+        exec {
+            commandLine 'sh', './koreanCheck.sh'
+            standardInput = System.in // 입력을 받을 수 있도록 설정
+        }
+    }
+}

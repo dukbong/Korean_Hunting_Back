@@ -36,6 +36,7 @@ public class SecurityConfig {
 				.requestMatchers("/admin/**").hasRole("ADMIN") // 관리자 페이지
 				.requestMatchers("/info/**").hasAnyRole("USER", "ADMIN") // 관리자 페이지
 				.requestMatchers("/file/**").hasAnyRole("USER", "ADMIN")
+				.requestMatchers("/api/**").hasRole("API")
 				.anyRequest().authenticated());
 
 		http.logout(logout -> logout.disable());
