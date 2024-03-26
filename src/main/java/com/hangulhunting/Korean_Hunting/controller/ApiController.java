@@ -1,9 +1,5 @@
 package com.hangulhunting.Korean_Hunting.controller;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -17,12 +13,10 @@ import com.hangulhunting.Korean_Hunting.serviceImpl.FileService;
 import com.hangulhunting.Korean_Hunting.serviceImpl.file.FileStructurePrinter;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api")
-@Slf4j
 public class ApiController {
 
 	private final FileService fileService;
@@ -30,7 +24,6 @@ public class ApiController {
 
 	@PostMapping("/upload")
 	public ApiResult apiUpload(@RequestParam("file") MultipartFile file) {
-		log.info("file name = {}", file.getOriginalFilename());
 		ZipFile zipFile = fileService.searchInFile(file, ExtractionStrategyType.EXTRACTION_KOREAN);
 		return fileStructurePrinter.analyzeFileContent(zipFile);
 	}

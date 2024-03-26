@@ -23,8 +23,10 @@ import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
 import com.hangulhunting.Korean_Hunting.service.ExtractionStrategy;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
+@Slf4j
 @RequiredArgsConstructor
 public class FileStructurePrinter {
 	
@@ -162,16 +164,27 @@ public class FileStructurePrinter {
 	
 	public ApiResult analyzeFileContent(ZipFile zipFile) {
 	    int fileCount = 0;
+	    zipFile.getDirectory();
 	    ArrayList<String> resultList = new ArrayList<>();
-	    String content = new String(zipFile.getContent(), StandardCharsets.UTF_8);
-	    String[] lines = content.split("\n");
-	    for (String line : lines) {
-	        if (line.matches("^\\d+\\. .*")) { // 숫자로 시작하고 . 뒤에 내용이 있는 패턴
-	            fileCount++;
-	        } else {
-	            resultList.add(line);
-	        }
+	    if(zipFile.getContent() != null) {
+	    	// 한글이 존재
+	    	String content = new String(zipFile.getContent(), StandardCharsets.UTF_8);
+	    	log.info("{content = ()",content);
+	    	String[] lines = content.split("\n");
+	    	for (String line : lines) {
+	    		if (line.matches("^\\d+\\. .*")) { // 숫자로 시작하고 . 뒤에 내용이 있는 패턴
+	    			fileCount++;
+	    		} else {
+	    			resultList.add(line);
+	    		}
+	    	}
+	    } else {
+	    	ArrayList<String> directorys = zipFile.getDirectory();
+	    	for(String directory : directorys) {
+	    		resultList.add(directory);
+	    	}
 	    }
+	    
 	    return ApiResult.builder().count(fileCount).fileName(resultList).build();
 	}
 }
