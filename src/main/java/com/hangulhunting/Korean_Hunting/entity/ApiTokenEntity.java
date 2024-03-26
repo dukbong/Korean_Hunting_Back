@@ -1,5 +1,8 @@
 package com.hangulhunting.Korean_Hunting.entity;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -29,11 +32,17 @@ public class ApiTokenEntity {
 	
 	private String apiToken;
 	
+	private LocalDate issuanceTime;
+	
+	private String tokenExpiresIn;
+	
 	@Builder
-	public ApiTokenEntity(Long id, UserEntity userEntity, String apiToken) {
+	public ApiTokenEntity(Long id, UserEntity userEntity, String apiToken, LocalDate issuanceTime, String tokenExpiresIn) {
 		super();
 		this.id = id;
 		this.userEntity = userEntity;
 		this.apiToken = apiToken;
+		this.issuanceTime = issuanceTime;
+		this.tokenExpiresIn = tokenExpiresIn;
 	}
 }

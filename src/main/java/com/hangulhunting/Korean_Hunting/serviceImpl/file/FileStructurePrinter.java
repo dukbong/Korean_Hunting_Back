@@ -3,6 +3,7 @@ package com.hangulhunting.Korean_Hunting.serviceImpl.file;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -12,6 +13,8 @@ import java.util.stream.Stream;
 
 import org.springframework.stereotype.Component;
 
+import com.hangulhunting.Korean_Hunting.dto.ZipFile;
+import com.hangulhunting.Korean_Hunting.dto.response.ApiResult;
 import com.hangulhunting.Korean_Hunting.entity.enumpackage.ExtractionStrategyType;
 import com.hangulhunting.Korean_Hunting.entity.enumpackage.FileStatus;
 import com.hangulhunting.Korean_Hunting.entity.enumpackage.FileType;
@@ -155,5 +158,20 @@ public class FileStructurePrinter {
 				throw new CustomException(ErrorCode.FILE_WRITE_ERROR);
 			}
 		}
+	}
+	
+	public ApiResult analyzeFileContent(ZipFile zipFile) {
+	    int fileCount = 0;
+	    ArrayList<String> resultList = new ArrayList<>();
+	    String content = new String(zipFile.getContent(), StandardCharsets.UTF_8);
+	    String[] lines = content.split("\n");
+	    for (String line : lines) {
+	        if (line.matches("^\\d+\\. .*")) { // 숫자로 시작하고 . 뒤에 내용이 있는 패턴
+	            fileCount++;
+	        } else {
+	            resultList.add(line);
+	        }
+	    }
+	    return ApiResult.builder().count(fileCount).fileName(resultList).build();
 	}
 }

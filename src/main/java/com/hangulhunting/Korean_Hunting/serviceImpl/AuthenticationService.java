@@ -129,7 +129,9 @@ public class AuthenticationService {
 								.userId(userEntity.getUserId())
 								.email(userEntity.getEmail())
 								.company(userEntity.getCompany())
-								.apiToken(userEntity.getApiTokenEntity().getApiToken())
+								.apiToken(userEntity.getApiTokenEntity() != null ? userEntity.getApiTokenEntity().getApiToken() : null)
+								.issuanceTime(userEntity.getApiTokenEntity() != null ? userEntity.getApiTokenEntity().getIssuanceTime() : null)
+								.tokenExpiresIn(userEntity.getApiTokenEntity() != null ? userEntity.getApiTokenEntity().getTokenExpiresIn() : null)
 								.build();
 		return userInfo;
 	}

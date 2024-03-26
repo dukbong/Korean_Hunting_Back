@@ -1,6 +1,8 @@
 package com.hangulhunting.Korean_Hunting.jwt;
 
 import java.security.Key;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -17,13 +19,14 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import com.hangulhunting.Korean_Hunting.dto.response.ApiIssuance;
 import com.hangulhunting.Korean_Hunting.dto.token.TokenDto;
 import com.hangulhunting.Korean_Hunting.entity.RefreshToken;
 import com.hangulhunting.Korean_Hunting.entity.UserEntity;
+import com.hangulhunting.Korean_Hunting.entity.enumpackage.UserRole;
 import com.hangulhunting.Korean_Hunting.exception.CustomException;
 import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
 import com.hangulhunting.Korean_Hunting.jwt.etc.TokenETC;
-import com.hangulhunting.Korean_Hunting.repository.UserRepository;
 import com.hangulhunting.Korean_Hunting.serviceImpl.BlackListService;
 import com.hangulhunting.Korean_Hunting.serviceImpl.RefreshTokenService;
 
@@ -67,7 +70,7 @@ public class TokenProvider {
 										   .map(GrantedAuthority::getAuthority)
 										   .collect(Collectors.joining(","));
 		long now = (new Date()).getTime();
-		
+		log.info("권한 - {}", authorities);
 		Date tokenExpiresIn = new Date(now + TokenETC.ACCESS_TOKEN_EXPIRE_TIME);
 		String accessToken = Jwts.builder()
 								 .setSubject(authentication.getName())
@@ -89,15 +92,20 @@ public class TokenProvider {
 					   .build();
 	}
 	
-	public String apigenerateToken(Authentication authentication) {
+	public ApiIssuance apigenerateToken(Authentication authentication) {
 		long now = (new Date()).getTime();
 		Date tokenExpiresIn = new Date(now + TokenETC.API_TOKEN_EXPIRE_TIME);
-		return Jwts.builder()
-				   .setSubject(authentication.getName())
-				   .claim(TokenETC.AUTHORITIES_KEY, "API")
-				   .setExpiration(tokenExpiresIn)
-				   .signWith(key, SignatureAlgorithm.HS512)
-				   .compact();
+		
+		String apiToken = Jwts.builder()
+				   			  .setSubject(authentication.getName())
+				   			  .claim(TokenETC.AUTHORITIES_KEY, UserRole.ROLE_API)
+				   			  .setExpiration(tokenExpiresIn)
+				   			  .signWith(key, SignatureAlgorithm.HS512)
+				   			  .compact();
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	    String tokenExpiresInString = dateFormat.format(tokenExpiresIn);
+	    
+		return ApiIssuance.builder().apiToken(apiToken).issuanceTime(LocalDate.now()).tokenExpiresIn(tokenExpiresInString).build();
 	}
 	
 	
