@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 
 /*
 interface di
+
+setter method !!
 constructer
 */
 @Component
