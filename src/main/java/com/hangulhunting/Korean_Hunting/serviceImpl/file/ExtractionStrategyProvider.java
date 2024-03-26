@@ -9,6 +9,11 @@ import com.hangulhunting.Korean_Hunting.service.ExtractionStrategy;
 
 import lombok.RequiredArgsConstructor;
 
+
+/*
+interface di
+constructer
+*/
 @Component
 @RequiredArgsConstructor
 public class ExtractionStrategyProvider {
