@@ -149,3 +149,7 @@ gradle-app.setting
 # End of https://www.toptal.com/developers/gitignore/api/eclipse,windows,java,gradle
 
 src/test/java/com/hangulhunting/Korean_Hunting/etc/dummy/*
+
+# Ignore application properties
+application.properties
+jwt.properties
