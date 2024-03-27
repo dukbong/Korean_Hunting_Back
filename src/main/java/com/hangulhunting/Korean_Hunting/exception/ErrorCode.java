@@ -25,6 +25,8 @@ public enum ErrorCode {
 	FILE_WRITE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "찾은 한글 파일을 생성하는 과정에서 오류가 발생하였습니다."),
 	FILE_PROCESSING_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "첨부 파일을 처리하는 과정에서 오류가 발생하였습니다."),
 	FILE_STRATEGY_ERROR(HttpStatus.BAD_REQUEST, "파일 탐색 전략이 올바르게 선택되지 않았습니다."),
+	API_TOKEN_NOT_FOUND(HttpStatus.BAD_REQUEST, "API TOKEN NOT FOUND"),
+	API_CREATE_ERROR(HttpStatus.BAD_REQUEST, "API 인증키 생성에 실패하였습니다."),
 	
 	/* 404 NOT FOUND : Resource 를 찾을 수 없음 */
 	MEMBER_NOT_FOUND_BY_ID(HttpStatus.NOT_FOUND, "해당 멤버 ID가 없습니다: %s"),

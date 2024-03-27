@@ -1,6 +1,7 @@
 package com.hangulhunting.Korean_Hunting.controller;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -27,21 +28,38 @@ public class ApiCreateController {
 	private final TokenProvider tokenProvider;
 	private final UserRepository userRepository;
 	private final ApiTokenRepository apiTokenRepository;
-	
-	@GetMapping("/crateApi")
-	public ResponseEntity<ApiIssuance> apiCreate(@RequestParam("userId") String userId) {
-		UserEntity userEntity = userRepository.findByUserId(userId).orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND_BY_ID));
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		ApiIssuance apiTokenInfo = tokenProvider.apigenerateToken(authentication);
-		ApiTokenEntity apiTokenEntity = ApiTokenEntity.builder()
-													  .apiToken(apiTokenInfo.getApiToken())
-													  .userEntity(userEntity)
-													  .issuanceTime(LocalDate.now())
-													  .tokenExpiresIn(apiTokenInfo.getTokenExpiresIn())
-													  .build();
-		apiTokenRepository.save(apiTokenEntity);
-		
-		return ResponseEntity.ok().body(apiTokenInfo);
+
+	@GetMapping("/createApi")
+	public ResponseEntity<ApiIssuance> createApiToken(@RequestParam("userId") String userId) {
+		UserEntity userEntity = getUserById(userId);
+		checkAndDeleteExpiredToken(userEntity);
+		ApiIssuance apiIssuance = generateAndSaveToken(userEntity);
+		return ResponseEntity.ok().body(apiIssuance);
 	}
-	
+
+	private UserEntity getUserById(String userId) {
+		return userRepository.findByUserId(userId)
+				.orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND_BY_ID));
+	}
+
+	private void checkAndDeleteExpiredToken(UserEntity userEntity) {
+		Optional<ApiTokenEntity> apiTokenOpt = apiTokenRepository.findByUserEntity(userEntity);
+		if (apiTokenOpt.isPresent() && !tokenProvider.validateToken(apiTokenOpt.get().getApiToken())) {
+			try {
+				apiTokenRepository.deleteByUserEntity(userEntity);
+			} catch (Exception e) {
+				throw new CustomException(ErrorCode.API_CREATE_ERROR);
+			}
+		}
+	}
+
+	private ApiIssuance generateAndSaveToken(UserEntity userEntity) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		ApiIssuance apiIssuance = tokenProvider.apigenerateToken(authentication);
+		ApiTokenEntity apiTokenEntity = ApiTokenEntity.builder().apiToken(apiIssuance.getApiToken())
+				.userEntity(userEntity).issuanceTime(LocalDate.now()).tokenExpiresIn(apiIssuance.getTokenExpiresIn())
+				.build();
+		apiTokenRepository.save(apiTokenEntity);
+		return apiIssuance;
+	}
 }
