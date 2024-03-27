@@ -19,21 +19,10 @@ This website provides a service to find specific parts in the source code (e.g.,
 ### Custom Build Process
 
 1. Configure your project using custom Gradle or Maven build scripts.
-2. Before initiating the build process, ensure there are no Korean characters in the source code, using a custom build process instead of the default one.
+2. Before starting the build process, make sure there are no Korean characters in your source code.
 3. If Korean characters are found in the source code, the user is notified about the number of occurrences and the respective file names.
 4. If Korean characters are detected in the source code, the user decides whether to proceed with the build process.
-Example of Custom Build Process (Gradle Project):
-Add to build.gradle:
-```groovy
-task koreanCheck {
-    doLast {
-        exec {
-            commandLine 'sh', './koreanCheck.sh'
-            standardInput = System.in
-        }
-    }
-}
-```
+
 ## Contributions
 
 Contributions to the project are welcome! If you have any suggestions for improvements or would like to report issues, please feel free to open an issue or submit a pull request on GitHub.
@@ -68,18 +57,6 @@ This project is licensed under the [MIT License](LICENSE).
 ### 커스텀 빌드 프로세스
 
 1. 사용자 정의 Gradle 또는 Maven 빌드 스크립트를 사용하여 프로젝트를 구성합니다.
-2. 빌드 프로세스를 시작하기 전에 소스 코드에 한글 문자가 없는지 확인합니다. 기본 빌드 프로세스 대신 커스텀 빌드 프로세스를 사용합니다.
+2. 빌드 프로세스를 시작하기 전에 소스 코드에 한글 문자가 없는지 확인합니다.
 3. 소스 코드에서 한글 문자가 발견되면 사용자에게 알립니다. 발생 횟수와 해당 파일 이름을 알려줍니다.
 4. 소스 코드에서 한글 문자가 감지되면 사용자가 빌드 프로세스를 계속할지 여부를 결정합니다.
-
-커스텀 빌드 프로세스 예시 (Gradle 프로젝트):
-build.gradle에 다음을 추가합니다:
-```groovy
-task koreanCheck {
-    doLast {
-        exec {
-            commandLine 'sh', './koreanCheck.sh'
-            standardInput = System.in
-        }
-    }
-}
