@@ -1,15 +1,18 @@
 package com.hangulhunting.Korean_Hunting.serviceImpl.file;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Set;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.springframework.stereotype.Component;
 
@@ -39,20 +42,67 @@ public class FileStructurePrinter {
 	 * @param fileTypes 처리할 파일 유형
 	 * @return 파일 구조를 나타내는 문자열 목록
 	 */
-	public ArrayList<String> printDirectory(Path directoryPath, FileType[] fileTypes, ExtractionStrategyType extractionStrategyType) {
+//	public ArrayList<String> printDirectory(Path directoryPath, FileType[] fileTypes, ExtractionStrategyType extractionStrategyType) {
+//		ArrayList<String> fileStructure = new ArrayList<>();
+//		try (Stream<Path> paths = Files.walk(directoryPath)) {
+//			Path root = directoryPath;
+//			paths.filter(Files::isRegularFile)
+//				 .map(path -> root.relativize(path))
+//				 .map(Path::toString)
+//				 .forEach(filePath -> {
+//				 log.info("filePath : {}", filePath);
+//				 processFile(directoryPath, filePath, fileTypes, fileStructure, extractionStrategyType);
+//				 });
+//			
+//			Collections.reverse(fileStructure);
+//		} catch (IOException e) {
+//			throw new CustomException(ErrorCode.FILE_STRUCTURE_ERROR);
+//		}
+//		return fileStructure;
+//	}
+	
+	public void printDirectory(ZipInputStream zipInputStream, ZipEntry zipEntry, ZipFile zipFile, FileType[] fileTypes, ExtractionStrategyType extractionStrategyType) throws IOException {
 		ArrayList<String> fileStructure = new ArrayList<>();
-		try (Stream<Path> paths = Files.walk(directoryPath)) {
-			Path root = directoryPath;
-			paths.filter(Files::isRegularFile)
-				 .map(path -> root.relativize(path))
-				 .map(Path::toString)
-				 .forEach(filePath -> processFile(directoryPath, filePath, fileTypes, fileStructure, extractionStrategyType));
-			Collections.reverse(fileStructure);
-		} catch (IOException e) {
-			throw new CustomException(ErrorCode.FILE_STRUCTURE_ERROR);
+		String entryName = zipEntry.getName();
+		for(FileType fileType : fileTypes) {
+			if(entryName.endsWith(fileType.getValue())) {
+	            // 파일 내용을 읽어올 InputStreamReader와 BufferedReader를 사용하여 처리합니다.
+	            try (InputStreamReader inputStreamReader = new InputStreamReader(zipInputStream, StandardCharsets.UTF_8);
+	                 BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
+	                StringBuilder contentBuilder = new StringBuilder();
+	                String line;
+	                while ((line = bufferedReader.readLine()) != null) {
+	                    contentBuilder.append(line).append("\n");
+	                }
+	                String content = contentBuilder.toString();
+	                Set<String> words = extractWords(content, extractionStrategyType);
+	                String fileName = entryName;
+	                // 단어가 검색되는지 확인하고, 검색되면 파일명에 특정 문자열을 추가합니다.
+	                if (search(words)) {
+	                    fileName += FileStatus._$INSERT;
+	                }
+	                zipFile.getDirectory().add(fileName);
+	            }
+	            break; 
+			}
 		}
-		return fileStructure;
+//		try (InputStreamReader inputStreamReader = new InputStreamReader(zipInputStream, StandardCharsets.UTF_8);
+//			BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
+//			StringBuilder contentBuilder = new StringBuilder();
+//			String line;
+//			while ((line = bufferedReader.readLine()) != null) {
+//				contentBuilder.append(line).append("\n");
+//			}
+//			String content = contentBuilder.toString();
+//			Set<String> words = extractWords(content, extractionStrategyType);
+//			String fileName = zipEntry.getName();
+//			if (search(words)) {
+//				fileName += FileStatus._$INSERT;
+//			}
+//			zipFile.getDirectory().add(fileName);
+//		}
 	}
+	
 
 	/***
 	 * 파일을 처리하여 파일 구조를 업데이트하는 서비스
@@ -112,14 +162,22 @@ public class FileStructurePrinter {
 	 * @return 파일의 내용을 나타내는 문자열
 	 */
 	private String getFileContent(Path directoryPath, String fileName) {
-		StringBuilder fileContentBuilder = new StringBuilder();
+//		StringBuilder fileContentBuilder = new StringBuilder();
+//		Path checkFilePath = directoryPath.resolve(fileName);
+//		try (Stream<String> lines = Files.lines(checkFilePath)) {
+//			lines.forEach(line -> fileContentBuilder.append(line).append("\n"));
+//		} catch (IOException e) {
+//			throw new CustomException(ErrorCode.FILE_READ_ERROR);
+//		}
+//		
+//		return fileContentBuilder.toString();
 		Path checkFilePath = directoryPath.resolve(fileName);
-		try (Stream<String> lines = Files.lines(checkFilePath)) {
-			lines.forEach(line -> fileContentBuilder.append(line).append("\n"));
-		} catch (IOException e) {
-			throw new CustomException(ErrorCode.FILE_READ_ERROR);
-		}
-		return fileContentBuilder.toString();
+        try {
+           return Files.lines(checkFilePath, StandardCharsets.UTF_8)
+                .collect(Collectors.joining("\n")); 
+        } catch (IOException e) {
+            throw new CustomException(ErrorCode.FILE_READ_ERROR);
+        }
 	}
 
 	/***
@@ -147,15 +205,16 @@ public class FileStructurePrinter {
 	 */
 	private void writeSearchResultToFile(Set<String> words, Path directoryPath, String fileName) {
 		if (!words.isEmpty()) {
-			StringBuilder contentBuilder = new StringBuilder();
+//			StringBuilder contentBuilder = new StringBuilder();
 			String koreanFilePath = directoryPath.resolve("text_package.txt").toString();
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(koreanFilePath, true));) {
 				bw.write(fileName + "\n");
 				int index = 1;
 				for (String word : words) {
-					contentBuilder.append(index++).append(". ").append(word).append("\n");
+//					contentBuilder.append(index++).append(". ").append(word).append("\n");
+					bw.write(index++ + ". " + word + "\n");
 				}
-				bw.write(contentBuilder.toString());
+//				bw.write(contentBuilder.toString());
 			} catch (IOException e) {
 				throw new CustomException(ErrorCode.FILE_WRITE_ERROR);
 			}
@@ -169,7 +228,6 @@ public class FileStructurePrinter {
 	    if(zipFile.getContent() != null) {
 	    	// 한글이 존재
 	    	String content = new String(zipFile.getContent(), StandardCharsets.UTF_8);
-	    	log.info("{content = ()",content);
 	    	String[] lines = content.split("\n");
 	    	for (String line : lines) {
 	    		if (line.matches("^\\d+\\. .*")) { // 숫자로 시작하고 . 뒤에 내용이 있는 패턴

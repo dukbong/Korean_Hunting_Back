@@ -1,11 +1,13 @@
 package com.hangulhunting.Korean_Hunting.serviceImpl;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.UUID;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,8 +23,10 @@ import com.hangulhunting.Korean_Hunting.serviceImpl.file.FileStructurePrinter;
 import com.hangulhunting.Korean_Hunting.serviceImpl.file.FileUnzipper;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class FileService {
 	
@@ -76,17 +80,34 @@ public class FileService {
 	 */
 	private ZipFile processFileStructure(MultipartFile file, Path tempFolderPath, ExtractionStrategyType extractionStrategyType) throws IOException {
 		ZipFile zipFile = new ZipFile();
-		fileUnzipper.unzip(file.getInputStream(), tempFolderPath);
-		ArrayList<String> fileStructure = fileStructurePrinter.printDirectory(tempFolderPath, FileType.values(), extractionStrategyType);
-		zipFile.setDirectory(fileStructure);
-		Path wordAddFilePath = Files.list(tempFolderPath)
-									.filter(path -> path.getFileName().toString().equals(FileConstants.SERVICE_TEXT_FILE_NAME.getValue()))
-									.findFirst()
-									.orElse(null);
-		if (wordAddFilePath != null) {
-			byte[] fileContent = Files.readAllBytes(wordAddFilePath);
-			zipFile.setContent(fileContent);
+//		1. 기존 방식 : 실제 저장 해서 탐색 
+//		fileUnzipper.unzip(file.getInputStream(), tempFolderPath);
+//		ArrayList<String> fileStructure = fileStructurePrinter.printDirectory(tempFolderPath, FileType.values(), extractionStrategyType);
+//		zipFile.setDirectory(fileStructure);
+//		Path wordAddFilePath = Files.list(tempFolderPath)
+//									.filter(path -> path.getFileName().toString().equals(FileConstants.SERVICE_TEXT_FILE_NAME.getValue()))
+//									.findFirst()
+//									.orElse(null);
+//		if (wordAddFilePath != null) {
+//			byte[] fileContent = Files.readAllBytes(wordAddFilePath);
+//			zipFile.setContent(fileContent);
+//		}
+//		return zipFile;
+
+//		2. 변경 방식 : 메모리에서 처리
+		try(ZipInputStream zipInputStream = new ZipInputStream(new BufferedInputStream(file.getInputStream()))){
+			ZipEntry zipEntry = zipInputStream.getNextEntry();
+			while(zipEntry != null) {
+				if(!zipEntry.isDirectory()) {
+					// zipEntry => pages/com/popup/UploadFileP.jsp
+					fileStructurePrinter.printDirectory(zipInputStream, zipEntry, zipFile, FileType.values(), extractionStrategyType);
+				}
+				zipEntry = zipInputStream.getNextEntry();
+			}
+		} catch (IOException e) {
+			throw new CustomException(ErrorCode.FILE_UNZIP_ERROR);
 		}
+		
 		return zipFile;
 	}
 

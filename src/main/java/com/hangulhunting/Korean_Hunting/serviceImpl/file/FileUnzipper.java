@@ -1,11 +1,11 @@
 package com.hangulhunting.Korean_Hunting.serviceImpl.file;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -16,6 +16,8 @@ import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
 
 @Component
 public class FileUnzipper {
+	
+	private static final int BUFFER_SIZE = 8192;
 
 	/***
 	 * 주어진 InputStream으로부터 zip 파일을 압축 해제하는 서비스
@@ -47,12 +49,25 @@ public class FileUnzipper {
 	 * @param inputStream 생성할 파일의 입력 스트림
 	 * @param targetPath 생성할 파일의 경로
 	 */
-	public void createFile(InputStream inputStream, Path targetPath) {
-		try {
-			Files.copy(inputStream, targetPath, StandardCopyOption.REPLACE_EXISTING);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
+//	public void createFile(InputStream inputStream, Path targetPath) {
+//		try {
+//			Files.copy(inputStream, targetPath, StandardCopyOption.REPLACE_EXISTING);
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//	}
+	
+	// 4423 ms -> 3786 ms
+    public void createFile(InputStream inputStream, Path targetPath) {
+        try (BufferedOutputStream outputStream = new BufferedOutputStream(Files.newOutputStream(targetPath))) {
+            byte[] buffer = new byte[BUFFER_SIZE];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+        } catch (IOException e) {
+            throw new CustomException(ErrorCode.FILE_WRITE_ERROR);
+        }
+    }
 	
 }
