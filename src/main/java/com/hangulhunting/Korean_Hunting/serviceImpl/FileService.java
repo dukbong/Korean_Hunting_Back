@@ -1,9 +1,13 @@
 package com.hangulhunting.Korean_Hunting.serviceImpl;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.zip.ZipEntry;
@@ -20,7 +24,6 @@ import com.hangulhunting.Korean_Hunting.exception.CustomException;
 import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
 import com.hangulhunting.Korean_Hunting.service.ExtractionStrategy;
 import com.hangulhunting.Korean_Hunting.serviceImpl.file.CommentRemover;
-import com.hangulhunting.Korean_Hunting.serviceImpl.file.ContentExtractor;
 import com.hangulhunting.Korean_Hunting.serviceImpl.file.ExtractionStrategyProvider;
 
 import lombok.RequiredArgsConstructor;
@@ -33,7 +36,6 @@ public class FileService {
 
 	private final CommentRemover commentRemover;
 	private final ExtractionStrategyProvider extractionStrategyProvider;
-	private final ContentExtractor contentExtractor;
 
 	/***
 	 * 사용자가 원하는 파일에서 원하는 내용을 찾아주는 서비스
@@ -57,7 +59,7 @@ public class FileService {
 			throws IOException {
 		ZipFile zipFile = new ZipFile();
 		ArrayList<String> directory = new ArrayList<>();
-		try (ZipInputStream zipInputStream = new ZipInputStream(new BufferedInputStream(file.getInputStream()))) {
+		try (ZipInputStream zipInputStream = new ZipInputStream(new BufferedInputStream(file.getInputStream()), StandardCharsets.UTF_8)) {
 			ZipEntry zipEntry;
 			byte[] buffer = new byte[1024];
 			while ((zipEntry = zipInputStream.getNextEntry()) != null) {
@@ -66,6 +68,7 @@ public class FileService {
 				}
 			}
 		} catch (IOException e) {
+			e.printStackTrace();
 			throw new CustomException(ErrorCode.FILE_UNZIP_ERROR);
 		}
 		zipFile.setDirectory(directory);
@@ -79,8 +82,8 @@ public class FileService {
 			throws IOException {
 		for (FileType fileType : FileType.values()) {
 			if (zipEntry.getName().endsWith(fileType.getValue())) {
-				String content = contentExtractor.extractContent(zipInputStream, buffer);
-				String contentWithoutComments = commentRemover.removeComments(content, fileType.getValue());
+//				String content = contentExtractor.extractContent(zipInputStream, buffer);
+				String contentWithoutComments = commentRemover.removeComments(zipInputStream, fileType.getValue());
 				ExtractionStrategy extractionStrategy = extractionStrategyProvider
 						.setExtractionStrategy(extractionStrategyType);
 				Set<String> words = extractionStrategy.extract(contentWithoutComments);
@@ -89,7 +92,6 @@ public class FileService {
 				} else {
 					directory.add(zipEntry.getName());
 				}
-				return;
 			}
 		}
 		directory.add(zipEntry.getName());
@@ -118,30 +120,52 @@ public class FileService {
 	}
 
 // 스트림 처리로 짤라서 읽기 수정해야함
+//	private byte[] writeSearchResultToByteArray(Set<String> words, String filePath) {
+//		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+//		try {
+//			bos.write(filePath.getBytes());
+//			bos.write(System.lineSeparator().getBytes());
+//
+//			int count = 1;
+//			for (String word : words) {
+//				String line = count + ". " + word;
+//				bos.write(line.getBytes());
+//				bos.write(System.lineSeparator().getBytes());
+//				count++;
+//			}
+//			return bos.toByteArray();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//			throw new CustomException(ErrorCode.FILE_WRITE_ERROR);
+//		} finally {
+//			try {
+//				bos.close();
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//				throw new CustomException(ErrorCode.FILE_WRITE_ERROR);
+//			}
+//		}
+//	}
+	
 	private byte[] writeSearchResultToByteArray(Set<String> words, String filePath) {
-		ByteArrayOutputStream bos = new ByteArrayOutputStream();
-		try {
-			bos.write(filePath.getBytes());
-			bos.write(System.lineSeparator().getBytes());
+	    try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+	         BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(bos, 1024);
+	         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(bufferedOutputStream))) {
 
-			int count = 1;
-			for (String word : words) {
-				String line = count + ". " + word;
-				bos.write(line.getBytes());
-				bos.write(System.lineSeparator().getBytes());
-				count++;
-			}
-			return bos.toByteArray();
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new CustomException(ErrorCode.FILE_WRITE_ERROR);
-		} finally {
-			try {
-				bos.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-				throw new CustomException(ErrorCode.FILE_WRITE_ERROR);
-			}
-		}
+	        writer.write(filePath);
+	        writer.newLine();
+
+	        int count = 1;
+	        for (String word : words) {
+	            writer.write(count + ". " + word);
+	            writer.newLine();
+	            count++;
+	        }
+	        writer.flush();
+	        return bos.toByteArray();
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        throw new CustomException(ErrorCode.FILE_WRITE_ERROR);
+	    }
 	}
 }
