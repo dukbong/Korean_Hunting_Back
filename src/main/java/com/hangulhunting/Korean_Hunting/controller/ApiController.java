@@ -10,7 +10,7 @@ import com.hangulhunting.Korean_Hunting.dto.ZipFile;
 import com.hangulhunting.Korean_Hunting.dto.response.ApiResult;
 import com.hangulhunting.Korean_Hunting.entity.enumpackage.ExtractionStrategyType;
 import com.hangulhunting.Korean_Hunting.serviceImpl.FileService;
-import com.hangulhunting.Korean_Hunting.serviceImpl.file.FileStructurePrinter;
+import com.hangulhunting.Korean_Hunting.serviceImpl.file.AnalyzeFileContent;
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,11 +20,11 @@ import lombok.RequiredArgsConstructor;
 public class ApiController {
 
 	private final FileService fileService;
-	private final FileStructurePrinter fileStructurePrinter;
+	private final AnalyzeFileContent analyzeFileContent;
 
 	@PostMapping("/upload")
 	public ApiResult apiUpload(@RequestParam("file") MultipartFile file) {
 		ZipFile zipFile = fileService.searchInFile(file, ExtractionStrategyType.EXTRACTION_KOREAN);
-		return fileStructurePrinter.analyzeFileContent(zipFile);
+		return analyzeFileContent.analyzeFileContent(zipFile);
 	}
 }

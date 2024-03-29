@@ -1,6 +1,6 @@
 package com.hangulhunting.Korean_Hunting.dto.response;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -11,10 +11,10 @@ import lombok.NoArgsConstructor;
 public class ApiResult {
 
 	private int count;
-	private ArrayList<String> fileName;
+	private List<String> fileName;
 	
 	@Builder
-	public ApiResult(int count, ArrayList<String> fileName) {
+	public ApiResult(int count, List<String> fileName) {
 		super();
 		this.count = count;
 		this.fileName = fileName;

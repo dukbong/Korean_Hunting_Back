@@ -1,5 +1,5 @@
 #!/bin/bash
-file_path="./token.txt"
+file_path="./source_code_io/token.txt"
 if [ -f "$file_path" ]; then
     token=$(grep -o 'token=[^ ]*' "$file_path" | cut -d'=' -f2)
     if [ -z "$token" ]; then
