@@ -72,6 +72,8 @@ public class FileService {
 		return zipFile;
 	}
 
+// content 없애고 주석 제거 시 스트림으로전달 후 제거
+// 굳이 String을 만들어서 메모리 잡아먹지말자
 	private void processZipEntry(ZipInputStream zipInputStream, ZipEntry zipEntry, byte[] buffer,
 			ArrayList<String> directory, ZipFile zipFile, ExtractionStrategyType extractionStrategyType)
 			throws IOException {
