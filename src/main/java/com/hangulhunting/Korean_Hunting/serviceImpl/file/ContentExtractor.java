@@ -7,6 +7,7 @@ import java.util.zip.ZipInputStream;
 
 import org.springframework.stereotype.Component;
 
+// 삭제예정
 @Component
 public class ContentExtractor {
 	
