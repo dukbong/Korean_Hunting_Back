@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+// 삭제 예정 파일을 저장하지 않음
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
