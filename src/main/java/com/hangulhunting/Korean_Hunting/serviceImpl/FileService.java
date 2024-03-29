@@ -117,6 +117,7 @@ public class FileService {
 		return combinedBuffer.array();
 	}
 
+// 스트림 처리로 짤라서 읽기 수정해야함
 	private byte[] writeSearchResultToByteArray(Set<String> words, String filePath) {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		try {
