@@ -75,13 +75,14 @@ public class FileStructurePrinter {
 	                    contentBuilder.append(line).append("\n");
 	                }
 	                String content = contentBuilder.toString();
-	                Set<String> words = extractWords(content, extractionStrategyType);
-	                String fileName = entryName;
+	                log.info("filename = {} \ncontent >>> \n{}", entryName, content);
+//	                Set<String> words = extractWords(content, extractionStrategyType);
+//	                String fileName = entryName;
 	                // 단어가 검색되는지 확인하고, 검색되면 파일명에 특정 문자열을 추가합니다.
-	                if (search(words)) {
-	                    fileName += FileStatus._$INSERT;
-	                }
-	                zipFile.getDirectory().add(fileName);
+//	                if (search(words)) {
+//	                    fileName += FileStatus._$INSERT;
+//	                }
+//	                zipFile.getDirectory().add(fileName);
 	            }
 	            break; 
 			}
