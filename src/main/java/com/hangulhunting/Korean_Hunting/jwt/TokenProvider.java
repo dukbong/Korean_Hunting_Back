@@ -44,7 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j
-@PropertySource(value = {"jwt.properties"})
+@PropertySource(value = {"classpath:jwt.properties"})
 public class TokenProvider {
 
 	private final Key key;
