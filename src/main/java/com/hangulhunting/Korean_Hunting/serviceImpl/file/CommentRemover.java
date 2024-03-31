@@ -10,6 +10,9 @@ import java.util.zip.ZipInputStream;
 
 import org.springframework.stereotype.Component;
 
+import com.hangulhunting.Korean_Hunting.exception.CustomException;
+import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Component
@@ -26,7 +29,7 @@ public class CommentRemover {
         commentPattern.put(".java", Pattern.compile("//.*|(?s)/\\*.*?\\*/"));
         commentPattern.put(".cs", Pattern.compile("//.*|(?s)/\\*.*?\\*/"));
         commentPattern.put(".py", Pattern.compile("#.*|(?s)\"\"\".*?\"\"\"|(?s)'''.*?'''"));
-        commentPattern.put(".css", Pattern.compile("(?s)/\\*.*?\\*/"));
+//        commentPattern.put(".css", Pattern.compile("(?s)/\\*.*?\\*/"));
         
 	}
 
@@ -64,20 +67,30 @@ public class CommentRemover {
 //		return fileContent;
 //	}
 
-    public String removeComments(ZipInputStream zipInputStream, String fileType) throws IOException {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        byte[] buffer = new byte[1024];
-        int bytesRead;
-        while ((bytesRead = zipInputStream.read(buffer)) != -1) {
-            outputStream.write(buffer, 0, bytesRead);
-        }
-
-        Pattern pattern = commentPattern.get(fileType);
-            byte[] fileBytes = outputStream.toByteArray();
-            String fileContent = new String(fileBytes, "UTF-8");
-            Matcher matcher = pattern.matcher(fileContent);
-            fileContent = matcher.replaceAll("");
-            return fileContent;
+    public String removeComments(ZipInputStream zipInputStream, String fileType) {
+    	ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    	try {
+    		byte[] buffer = new byte[1024];
+    		int bytesRead;
+    		while ((bytesRead = zipInputStream.read(buffer)) != -1) {
+    			outputStream.write(buffer, 0, bytesRead);
+    		}
+    		
+    		Pattern pattern = commentPattern.get(fileType);
+    		byte[] fileBytes = outputStream.toByteArray();
+    		String fileContent = new String(fileBytes, "UTF-8");
+    		Matcher matcher = pattern.matcher(fileContent);
+    		fileContent = matcher.replaceAll("");
+    		return fileContent;
+    	} catch(IOException e) {
+    		throw new CustomException(ErrorCode.FILE_REMOVE_COMMENT);
+    	} finally {
+    		try {
+				outputStream.close();
+			} catch (IOException e) {
+				log.error("ByteArrayOutputStream close error : {}", e);
+			}
+    	}
 //            switch (fileType) {
 //    		case ".html":
 ////    			fileContent = fileContent.replaceAll("//.*", ""); // 일반적인 한줄 주석 처리

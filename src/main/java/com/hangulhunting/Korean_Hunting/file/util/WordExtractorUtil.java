@@ -2,10 +2,12 @@ package com.hangulhunting.Korean_Hunting.file.util;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import com.hangulhunting.Korean_Hunting.exception.CustomException;
 import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
@@ -18,12 +20,32 @@ public class WordExtractorUtil {
      * @param groupIndex 추출할 그룹 인덱스
      * @return 추출된 단어들의 Set
      */
+//    public static Set<String> extractWords(String contentWithoutComments, String regex, int groupIndex) {
+//        Set<String> words = new HashSet<>();
+//        try (BufferedReader reader = new BufferedReader(new StringReader(contentWithoutComments))) {
+//            String line;
+//            while ((line = reader.readLine()) != null) {
+//                Pattern pattern = Pattern.compile(regex);
+//                Matcher matcher = pattern.matcher(line);
+//                while (matcher.find()) {
+//                    String word = matcher.group(groupIndex).trim();
+//                    if (!word.isEmpty()) {
+//                        words.add(word);
+//                    }
+//                }
+//            }
+//        } catch (Exception e) {
+//        	throw new CustomException(ErrorCode.FILE_EXTRACT_WORD);
+//        }
+//        return words;
+//    }
+	
     public static Set<String> extractWords(String contentWithoutComments, String regex, int groupIndex) {
-        Set<String> words = new HashSet<>();
+        Set<String> words = Collections.newSetFromMap(new ConcurrentHashMap<>()); // ConcurrentHashMap을 사용하여 동시성 이슈를 해결하고 메모리 사용을 최적화합니다.
         try (BufferedReader reader = new BufferedReader(new StringReader(contentWithoutComments))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                Pattern pattern = Pattern.compile(regex);
+            Stream<String> lines = reader.lines().parallel(); // 병렬 스트림으로 변경하여 데이터를 병렬로 처리합니다.
+            Pattern pattern = Pattern.compile(regex); // 정규식 패턴을 컴파일하여 재사용합니다.
+            lines.forEach(line -> {
                 Matcher matcher = pattern.matcher(line);
                 while (matcher.find()) {
                     String word = matcher.group(groupIndex).trim();
@@ -31,9 +53,9 @@ public class WordExtractorUtil {
                         words.add(word);
                     }
                 }
-            }
+            });
         } catch (Exception e) {
-        	throw new CustomException(ErrorCode.FILE_EXTRACT_WORD);
+            throw new CustomException(ErrorCode.FILE_EXTRACT_WORD);
         }
         return words;
     }

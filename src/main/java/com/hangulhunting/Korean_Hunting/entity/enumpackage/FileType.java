@@ -13,7 +13,7 @@ public enum FileType {
 	JAVA(".java"),
 	JS(".js"),
 	JSX(".jsx"),
-	CSS(".css"),
+//	CSS(".css"),
 	HTML(".html");
 
     private final String value;

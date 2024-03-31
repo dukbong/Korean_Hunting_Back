@@ -28,6 +28,7 @@ public enum ErrorCode {
 	API_TOKEN_NOT_FOUND(HttpStatus.BAD_REQUEST, "API TOKEN NOT FOUND"),
 	API_CREATE_ERROR(HttpStatus.BAD_REQUEST, "API 인증키 생성에 실패하였습니다."),
 	FILE_EXTRACT_WORD(HttpStatus.INTERNAL_SERVER_ERROR, "분석 과정에서 오류가 발생했습니다."),
+	FILE_REMOVE_COMMENT(HttpStatus.INTERNAL_SERVER_ERROR, "주석 제거 작업 중 오류가 발생하였습니다."),
 	
 	/* 404 NOT FOUND : Resource 를 찾을 수 없음 */
 	MEMBER_NOT_FOUND_BY_ID(HttpStatus.NOT_FOUND, "해당 멤버 ID가 없습니다: %s"),

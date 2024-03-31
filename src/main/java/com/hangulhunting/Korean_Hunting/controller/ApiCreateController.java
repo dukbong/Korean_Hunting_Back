@@ -63,7 +63,6 @@ public class ApiCreateController {
             return ResponseEntity.internalServerError().build();
         }
         
-        log.info("data = {}", data);
         return ResponseEntity.ok()
 			                 .body(new UserResDto(data));
     }

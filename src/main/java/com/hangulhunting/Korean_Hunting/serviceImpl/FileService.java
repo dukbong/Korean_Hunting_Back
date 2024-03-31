@@ -2,14 +2,13 @@ package com.hangulhunting.Korean_Hunting.serviceImpl;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -147,25 +146,50 @@ public class FileService {
 //		}
 //	}
 	
+//	private byte[] writeSearchResultToByteArray(Set<String> words, String filePath) {
+//	    try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+//	         BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(bos, 1024);
+//	         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(bufferedOutputStream))) {
+//
+//	        writer.write(filePath);
+//	        writer.newLine();
+//
+//	        int count = 1;
+//	        for (String word : words) {
+//	            writer.write(count + ". " + word);
+//	            writer.newLine();
+//	            count++;
+//	        }
+//	        writer.flush();
+//	        return bos.toByteArray();
+//	    } catch (IOException e) {
+//	        e.printStackTrace();
+//	        throw new CustomException(ErrorCode.FILE_WRITE_ERROR);
+//	    }
+//	}
+	
 	private byte[] writeSearchResultToByteArray(Set<String> words, String filePath) {
 	    try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-	         BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(bos, 1024);
-	         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(bufferedOutputStream))) {
+	         BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(bos, 1024)) {
 
-	        writer.write(filePath);
-	        writer.newLine();
+	        bos.write(filePath.getBytes(StandardCharsets.UTF_8));
+	        bos.write(System.lineSeparator().getBytes(StandardCharsets.UTF_8));
 
-	        int count = 1;
+	        AtomicInteger count = new AtomicInteger(1);
 	        for (String word : words) {
-	            writer.write(count + ". " + word);
-	            writer.newLine();
-	            count++;
+	            String line = count.getAndIncrement() + ". " + word + System.lineSeparator();
+	            bufferedOutputStream.write(line.getBytes(StandardCharsets.UTF_8));
 	        }
-	        writer.flush();
+
+	        bufferedOutputStream.flush();
 	        return bos.toByteArray();
 	    } catch (IOException e) {
 	        e.printStackTrace();
 	        throw new CustomException(ErrorCode.FILE_WRITE_ERROR);
 	    }
 	}
+
+
+
+
 }
