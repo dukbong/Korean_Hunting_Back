@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -58,13 +59,14 @@ public class FileService {
 			throws IOException {
 		ZipFile zipFile = new ZipFile();
 		ArrayList<String> directory = new ArrayList<>();
+	
 		try (ZipInputStream zipInputStream = new ZipInputStream(new BufferedInputStream(file.getInputStream()), StandardCharsets.UTF_8)) {
 			ZipEntry zipEntry;
-			byte[] buffer = new byte[1024];
 			while ((zipEntry = zipInputStream.getNextEntry()) != null) {
 				if (!zipEntry.isDirectory()) {
-					processZipEntry(zipInputStream, zipEntry, buffer, directory, zipFile, extractionStrategyType);
+					processZipEntry(zipInputStream, zipEntry, directory, zipFile, extractionStrategyType);
 				}
+				zipInputStream.closeEntry();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -74,14 +76,35 @@ public class FileService {
 		return zipFile;
 	}
 
-// content 없애고 주석 제거 시 스트림으로전달 후 제거
-// 굳이 String을 만들어서 메모리 잡아먹지말자
-	private void processZipEntry(ZipInputStream zipInputStream, ZipEntry zipEntry, byte[] buffer,
-			ArrayList<String> directory, ZipFile zipFile, ExtractionStrategyType extractionStrategyType)
+//	private ZipFile processFileStructure(MultipartFile file, ExtractionStrategyType extractionStrategyType)
+//			throws IOException {
+//		ZipFile zipFile = new ZipFile();
+//		ArrayList<String> directory = new ArrayList<>();
+//
+//		try (ZipInputStream zipInputStream = new ZipInputStream(file.getInputStream(), StandardCharsets.UTF_8);
+//				BufferedInputStream bufferedInputStream = new BufferedInputStream(zipInputStream)) {
+//
+//			ZipEntry zipEntry;
+//
+//			while ((zipEntry = zipInputStream.getNextEntry()) != null) {
+//				if (!zipEntry.isDirectory()) {
+//					processZipEntry(bufferedInputStream, zipEntry, directory, zipFile, extractionStrategyType);
+//					zipInputStream.closeEntry();
+//				}
+//			}
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//			throw new CustomException(ErrorCode.FILE_UNZIP_ERROR);
+//		}
+//
+//		zipFile.setDirectory(directory);
+//		return zipFile;
+//	}
+
+	private void processZipEntry(InputStream zipInputStream, ZipEntry zipEntry, ArrayList<String> directory, ZipFile zipFile, ExtractionStrategyType extractionStrategyType)
 			throws IOException {
 		for (FileType fileType : FileType.values()) {
 			if (zipEntry.getName().endsWith(fileType.getValue())) {
-//				String content = contentExtractor.extractContent(zipInputStream, buffer);
 				String contentWithoutComments = commentRemover.removeComments(zipInputStream, fileType.getValue());
 				ExtractionStrategy extractionStrategy = extractionStrategyProvider
 						.setExtractionStrategy(extractionStrategyType);
@@ -118,78 +141,24 @@ public class FileService {
 		return combinedBuffer.array();
 	}
 
-// 스트림 처리로 짤라서 읽기 수정해야함
-//	private byte[] writeSearchResultToByteArray(Set<String> words, String filePath) {
-//		ByteArrayOutputStream bos = new ByteArrayOutputStream();
-//		try {
-//			bos.write(filePath.getBytes());
-//			bos.write(System.lineSeparator().getBytes());
-//
-//			int count = 1;
-//			for (String word : words) {
-//				String line = count + ". " + word;
-//				bos.write(line.getBytes());
-//				bos.write(System.lineSeparator().getBytes());
-//				count++;
-//			}
-//			return bos.toByteArray();
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//			throw new CustomException(ErrorCode.FILE_WRITE_ERROR);
-//		} finally {
-//			try {
-//				bos.close();
-//			} catch (IOException e) {
-//				e.printStackTrace();
-//				throw new CustomException(ErrorCode.FILE_WRITE_ERROR);
-//			}
-//		}
-//	}
-	
-//	private byte[] writeSearchResultToByteArray(Set<String> words, String filePath) {
-//	    try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-//	         BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(bos, 1024);
-//	         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(bufferedOutputStream))) {
-//
-//	        writer.write(filePath);
-//	        writer.newLine();
-//
-//	        int count = 1;
-//	        for (String word : words) {
-//	            writer.write(count + ". " + word);
-//	            writer.newLine();
-//	            count++;
-//	        }
-//	        writer.flush();
-//	        return bos.toByteArray();
-//	    } catch (IOException e) {
-//	        e.printStackTrace();
-//	        throw new CustomException(ErrorCode.FILE_WRITE_ERROR);
-//	    }
-//	}
-	
 	private byte[] writeSearchResultToByteArray(Set<String> words, String filePath) {
-	    try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-	         BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(bos, 1024)) {
+		try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+				BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(bos, 4096)) {
 
-	        bos.write(filePath.getBytes(StandardCharsets.UTF_8));
-	        bos.write(System.lineSeparator().getBytes(StandardCharsets.UTF_8));
+			bos.write(filePath.getBytes(StandardCharsets.UTF_8));
+			bos.write(System.lineSeparator().getBytes(StandardCharsets.UTF_8));
 
-	        AtomicInteger count = new AtomicInteger(1);
-	        for (String word : words) {
-	            String line = count.getAndIncrement() + ". " + word + System.lineSeparator();
-	            bufferedOutputStream.write(line.getBytes(StandardCharsets.UTF_8));
-	        }
-
-	        bufferedOutputStream.flush();
-	        return bos.toByteArray();
-	    } catch (IOException e) {
-	        e.printStackTrace();
-	        throw new CustomException(ErrorCode.FILE_WRITE_ERROR);
-	    }
+			int count = 1;
+			for (String word : words) {
+				String line = (count++) + ". " + word + System.lineSeparator();
+				bufferedOutputStream.write(line.getBytes(StandardCharsets.UTF_8));
+			}
+			bufferedOutputStream.flush();
+			return bos.toByteArray();
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new CustomException(ErrorCode.FILE_WRITE_ERROR);
+		}
 	}
-
-
-
 
 }

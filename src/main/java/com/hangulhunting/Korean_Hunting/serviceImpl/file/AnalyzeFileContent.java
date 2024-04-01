@@ -20,6 +20,8 @@ import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
 @Component
 public class AnalyzeFileContent {
 	
+	private AtomicInteger count = new AtomicInteger(0);
+	
 //	public ApiResult analyzeFileContent(ZipFile zipFile) {
 //		int fileCount = 0;
 //		List<String> resultList;
@@ -49,13 +51,12 @@ public class AnalyzeFileContent {
 	    List<String> resultList = new ArrayList<>();
 	    if (zipFile.getContent() != null) {
 	        try (InputStream inputStream = new ByteArrayInputStream(zipFile.getContent());
-	             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
-	            AtomicInteger count = new AtomicInteger(0);
+	             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8), 4096)) {
 	            reader.lines()
 	                  .parallel() // 병렬 처리
 	                  .forEach(line -> {
 	                      if (line.matches("^\\d+\\. .*")) {
-	                          count.getAndIncrement(); // 숫자로 시작하고 . 뒤에 내용이 있는 패턴인 경우
+	                    	  count.getAndIncrement(); // 숫자로 시작하고 . 뒤에 내용이 있는 패턴인 경우
 	                      } else {
 	                          resultList.add(line);
 	                      }
