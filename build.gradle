@@ -26,11 +26,12 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'io.micrometer:micrometer-registry-prometheus'
 	// https://mvnrepository.com/artifact/org.xerial.snappy/snappy-java >> 고속 압축
-	implementation 'org.xerial.snappy:snappy-java:1.1.10.5'
-	
+	// implementation 'org.xerial.snappy:snappy-java:1.1.10.5'
 	// https://mvnrepository.com/artifact/org.jboss.windup.decompiler/decompiler-fernflower
-	compileOnly group: 'org.jboss.windup.decompiler', name: 'decompiler-fernflower', version: '6.3.6.Final'
+	// compileOnly group: 'org.jboss.windup.decompiler', name: 'decompiler-fernflower', version: '6.3.6.Final'
 	
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'com.h2database:h2'
