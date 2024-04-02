@@ -8,8 +8,8 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -37,71 +37,67 @@ public class FileService {
 	private final CommentRemover commentRemover;
 	private final ExtractionStrategyProvider extractionStrategyProvider;
 
-	/***
-	 * 사용자가 원하는 파일에서 원하는 내용을 찾아주는 서비스
-	 * 
-	 * @param file                   사용자가 제공한 파일
-	 * @param extractionStrategyType 파일에 적용할 전략
-	 * @return 사용자가 원하는 내용이 포함된 파일 구조 및 텍스트
-	 */
 	public ZipFile searchInFile(MultipartFile file, ExtractionStrategyType extractionStrategyType) {
-		ZipFile zipFile = null;
-		try {
-			zipFile = processFileStructure(file, extractionStrategyType);
-		} catch (IOException e) {
-			log.error("Error while processing file structure: {}", e.getMessage());
-			throw new CustomException(ErrorCode.FILE_PROCESSING_ERROR);
-		}
-		return zipFile;
-	}
-
-	private ZipFile processFileStructure(MultipartFile file, ExtractionStrategyType extractionStrategyType)
-			throws IOException {
 		ZipFile zipFile = new ZipFile();
-		ArrayList<String> directory = new ArrayList<>();
-	
+		List<String> directory = new ArrayList<>();
+//		List<ZipEntry> zipEntries = new ArrayList<>(); // 2차 방식
 		try (ZipInputStream zipInputStream = new ZipInputStream(new BufferedInputStream(file.getInputStream()), StandardCharsets.UTF_8)) {
 			ZipEntry zipEntry;
 			while ((zipEntry = zipInputStream.getNextEntry()) != null) {
 				if (!zipEntry.isDirectory()) {
-					processZipEntry(zipInputStream, zipEntry, directory, zipFile, extractionStrategyType);
+//					zipEntries.add(zipEntry); // 2차 방식
+					processZipEntry(zipInputStream, zipEntry, directory, zipFile, extractionStrategyType); // 1차 방식
 				}
-				zipInputStream.closeEntry();
+				zipInputStream.closeEntry(); // 1차 방식
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new CustomException(ErrorCode.FILE_UNZIP_ERROR);
 		}
+		// 2차 방식 병렬 ---------------
+//		ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+//	    List<Future<?>> futures = new ArrayList<>();
+//
+//	    for (ZipEntry zipEntry : zipEntries) {
+//	        futures.add(executorService.submit(() -> processZipEntry(zipEntry, directory, zipFile, extractionStrategyType)));
+//	    }
+//
+//	    // 모든 작업이 완료될 때까지 대기
+//	    for (Future<?> future : futures) {
+//	        try {
+//	            future.get();
+//	        } catch (InterruptedException | ExecutionException e) {
+//	            e.printStackTrace();
+//	            throw new CustomException(ErrorCode.FILE_PROCESSING_ERROR);
+//	        }
+//	    }
+//
+//	    executorService.shutdown();
+	    // 2차 방식 병렬 ---------------
 		zipFile.setDirectory(directory);
 		return zipFile;
 	}
-
-//	private ZipFile processFileStructure(MultipartFile file, ExtractionStrategyType extractionStrategyType)
-//			throws IOException {
-//		ZipFile zipFile = new ZipFile();
-//		ArrayList<String> directory = new ArrayList<>();
-//
-//		try (ZipInputStream zipInputStream = new ZipInputStream(file.getInputStream(), StandardCharsets.UTF_8);
-//				BufferedInputStream bufferedInputStream = new BufferedInputStream(zipInputStream)) {
-//
-//			ZipEntry zipEntry;
-//
-//			while ((zipEntry = zipInputStream.getNextEntry()) != null) {
-//				if (!zipEntry.isDirectory()) {
-//					processZipEntry(bufferedInputStream, zipEntry, directory, zipFile, extractionStrategyType);
-//					zipInputStream.closeEntry();
+	
+	// 2차 방식
+//	private void processZipEntry(ZipEntry zipEntry, List<String> directory, ZipFile zipFile, ExtractionStrategyType extractionStrategyType) {
+//		for (FileType fileType : FileType.values()) {
+//			if (zipEntry.getName().endsWith(fileType.getValue())) {
+//				String contentWithoutComments = commentRemoverVersionUp.removeComments(zipEntry, fileType.getValue());
+//				ExtractionStrategy extractionStrategy = extractionStrategyProvider
+//						.setExtractionStrategy(extractionStrategyType);
+//				Set<String> words = extractionStrategy.extract(contentWithoutComments);
+//				if (search(zipEntry.getName(), words, zipFile)) {
+//					directory.add(zipEntry.getName() + FileStatus._$INSERT);
+//				} else {
+//					directory.add(zipEntry.getName());
 //				}
 //			}
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//			throw new CustomException(ErrorCode.FILE_UNZIP_ERROR);
 //		}
-//
-//		zipFile.setDirectory(directory);
-//		return zipFile;
+//		directory.add(zipEntry.getName());
 //	}
 
-	private void processZipEntry(InputStream zipInputStream, ZipEntry zipEntry, ArrayList<String> directory, ZipFile zipFile, ExtractionStrategyType extractionStrategyType)
+	// 1차 방식 : FileType의 수가 적기 때문에 별도의 알고리즘 적용 x 추후 생각
+	private void processZipEntry(InputStream zipInputStream, ZipEntry zipEntry, List<String> directory, ZipFile zipFile, ExtractionStrategyType extractionStrategyType)
 			throws IOException {
 		for (FileType fileType : FileType.values()) {
 			if (zipEntry.getName().endsWith(fileType.getValue())) {
@@ -160,5 +156,5 @@ public class FileService {
 			throw new CustomException(ErrorCode.FILE_WRITE_ERROR);
 		}
 	}
-
+	
 }

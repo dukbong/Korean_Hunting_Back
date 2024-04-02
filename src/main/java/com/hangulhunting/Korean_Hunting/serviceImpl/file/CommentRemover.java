@@ -54,5 +54,39 @@ public class CommentRemover {
 			}
 		}
 	}
+	
+//	public String removeComments(InputStream zipInputStream, String fileType) {
+//        ExecutorService executorService = Executors.newSingleThreadExecutor();
+//        try {
+//            Callable<String> task = () -> removeCommentss(zipInputStream, fileType);
+//            Future<String> future = executorService.submit(task);
+//            return future.get();
+//        } catch (InterruptedException | ExecutionException e) {
+//            throw new CustomException(ErrorCode.FILE_REMOVE_COMMENT);
+//        } finally {
+//            executorService.shutdown();
+//        }
+//    }
+//    
+//    private String removeCommentss(InputStream zipInputStream, String fileType) {
+//        try {
+//            String fileContent = readInputStream(zipInputStream);
+//            Pattern pattern = commentPattern.get(fileType);
+//            Matcher matcher = pattern.matcher(fileContent);
+//            return matcher.replaceAll("");
+//        } catch (IOException e) {
+//            throw new CustomException(ErrorCode.FILE_REMOVE_COMMENT);
+//        }
+//    }
+//    
+//    private String readInputStream(InputStream inputStream) throws IOException {
+//        StringBuilder stringBuilder = new StringBuilder();
+//        byte[] buffer = new byte[4096];
+//        int bytesRead;
+//        while ((bytesRead = inputStream.read(buffer)) != -1) {
+//            stringBuilder.append(new String(buffer, 0, bytesRead, StandardCharsets.UTF_8));
+//        }
+//        return stringBuilder.toString();
+//    }
 
 }

@@ -1,6 +1,6 @@
 package com.hangulhunting.Korean_Hunting.dto;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -9,5 +9,5 @@ import lombok.Setter;
 @Setter
 public class ZipFile {
 	private byte[] content;
-	private ArrayList<String> directory;
+	private List<String> directory;
 }

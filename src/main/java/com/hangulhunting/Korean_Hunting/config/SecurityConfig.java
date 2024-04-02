@@ -34,7 +34,8 @@ public class SecurityConfig {
 		http.authorizeHttpRequests(auth -> auth.requestMatchers("/login").permitAll() // 로그인
 				.requestMatchers("/join").permitAll() // 회원가입
 				.requestMatchers("/admin/**").hasRole("ADMIN") // 관리자 페이지
-				.requestMatchers("/info/**").hasAnyRole("USER", "ADMIN") // 관리자 페이지
+				.requestMatchers("/actuator/**").hasRole("USER") // actuator >> metrics
+				.requestMatchers("/info/**").hasAnyRole("USER", "ADMIN") 
 				.requestMatchers("/file/**").hasAnyRole("USER", "ADMIN")
 				.requestMatchers("/api/**").hasRole("API")
 				.anyRequest().authenticated());

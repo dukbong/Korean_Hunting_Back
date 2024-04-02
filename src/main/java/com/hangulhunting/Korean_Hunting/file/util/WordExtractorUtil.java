@@ -20,7 +20,7 @@ public class WordExtractorUtil {
      * @return 추출된 단어들의 Set
      */
 	
-	// 어떤걸 쓰던 아직 큰 성능 차이를 알 수 없다.
+	// 여기로 넘어오는 파일의 크기가 작기 때문에 병렬 처리를 하지 말자.
 //    public static Set<String> extractWords(String contentWithoutComments, String regex, int groupIndex) {
 //        Set<String> words = new HashSet<>();
 //        try (BufferedReader reader = new BufferedReader(new StringReader(contentWithoutComments), 3072)) {
@@ -41,23 +41,67 @@ public class WordExtractorUtil {
 //        return words;
 //    }
 	
-    public static Set<String> extractWords(String contentWithoutComments, String regex, int groupIndex) {
-    	Set<String> words = new HashSet<>();
-        try (BufferedReader reader = new BufferedReader(new StringReader(contentWithoutComments), 4096)) {
-            Stream<String> lines = reader.lines().parallel(); // 병렬 스트림으로 변경하여 데이터를 병렬로 처리합니다.
-            Pattern pattern = Pattern.compile(regex); // 정규식 패턴을 컴파일하여 재사용합니다.
-            lines.forEach(line -> {
-                Matcher matcher = pattern.matcher(line);
-                while (matcher.find()) {
-                    String word = matcher.group(groupIndex).trim();
-                    if (!word.isEmpty()) {
-                        words.add(word);
-                    }
-                }
-            });
-        } catch (Exception e) {
-            throw new CustomException(ErrorCode.FILE_EXTRACT_WORD);
-        }
-        return words;
-    }
+	// O(N) 통째로
+//	public static Set<String> extractWords(String contentWithoutComments, String regex, int groupIndex) {
+//	    Set<String> words = new HashSet<>();
+//	    try {
+//	        // 정규식 패턴을 미리 컴파일하여 재사용합니다.
+//	        Pattern pattern = Pattern.compile(regex);
+//	        Matcher matcher = pattern.matcher(contentWithoutComments);
+//	        
+//	        // 매칭된 결과를 집합에 추가합니다.
+//	        while (matcher.find()) {
+//	            String word = matcher.group(groupIndex).trim();
+//	            if (!word.isEmpty()) {
+//	                words.add(word);
+//	            }
+//	        }
+//	    } catch (Exception e) {
+//	        throw new CustomException(ErrorCode.FILE_EXTRACT_WORD);
+//	    }
+//	    return words;
+//	}
+	
+	// O(N) 한줄씩
+	public static Set<String> extractWords(String contentWithoutComments, String regex, int groupIndex) {
+	    Set<String> words = new HashSet<>();
+	    try (BufferedReader reader = new BufferedReader(new StringReader(contentWithoutComments))) {
+	        String line;
+	        Pattern pattern = Pattern.compile(regex); // 정규식 패턴을 컴파일하여 재사용합니다.
+	        
+	        // 각 줄에 대해 정규식을 적용하여 매칭된 결과를 집합에 추가합니다.
+	        while ((line = reader.readLine()) != null) {
+	            Matcher matcher = pattern.matcher(line);
+	            while (matcher.find()) {
+	                String word = matcher.group(groupIndex).trim();
+	                if (!word.isEmpty()) {
+	                    words.add(word);
+	                }
+	            }
+	        }
+	    } catch (Exception e) {
+	        throw new CustomException(ErrorCode.FILE_EXTRACT_WORD);
+	    }
+	    return words;
+	}
+	
+//    public static Set<String> extractWords(String contentWithoutComments, String regex, int groupIndex) {
+//    	Set<String> words = new HashSet<>();
+//        try (BufferedReader reader = new BufferedReader(new StringReader(contentWithoutComments), 4096)) {
+//            Stream<String> lines = reader.lines().parallel(); // 병렬 스트림으로 변경하여 데이터를 병렬로 처리합니다.
+//            Pattern pattern = Pattern.compile(regex); // 정규식 패턴을 컴파일하여 재사용합니다.
+//            lines.forEach(line -> {
+//                Matcher matcher = pattern.matcher(line);
+//                while (matcher.find()) {
+//                    String word = matcher.group(groupIndex).trim();
+//                    if (!word.isEmpty()) {
+//                        words.add(word);
+//                    }
+//                }
+//            });
+//        } catch (Exception e) {
+//            throw new CustomException(ErrorCode.FILE_EXTRACT_WORD);
+//        }
+//        return words;
+//    }
 }
