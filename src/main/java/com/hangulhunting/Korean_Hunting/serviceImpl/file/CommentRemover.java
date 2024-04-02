@@ -32,10 +32,9 @@ public class CommentRemover {
 		commentPattern.put(".py", Pattern.compile("#.*|(?s)\"\"\".*?\"\"\"|(?s)'''.*?'''"));
 	}
 
-	public String removeComments(InputStream zipInputStream, String fileType) {
+	public String removeComments(InputStream zipInputStream, byte[] buffer, String fileType) {
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		try {
-			byte[] buffer = new byte[4096];
 			int bytesRead;
 			while ((bytesRead = zipInputStream.read(buffer)) != -1) {
 				outputStream.write(buffer, 0, bytesRead);

@@ -41,7 +41,7 @@ public class FileService {
 		ZipFile zipFile = new ZipFile();
 		List<String> directory = new ArrayList<>();
 //		List<ZipEntry> zipEntries = new ArrayList<>(); // 2차 방식
-		try (ZipInputStream zipInputStream = new ZipInputStream(new BufferedInputStream(file.getInputStream()), StandardCharsets.UTF_8)) {
+		try (ZipInputStream zipInputStream = new ZipInputStream(new BufferedInputStream(file.getInputStream(), 1048576 /*1MB*/), StandardCharsets.UTF_8)) {
 			ZipEntry zipEntry;
 			while ((zipEntry = zipInputStream.getNextEntry()) != null) {
 				if (!zipEntry.isDirectory()) {
@@ -101,7 +101,8 @@ public class FileService {
 			throws IOException {
 		for (FileType fileType : FileType.values()) {
 			if (zipEntry.getName().endsWith(fileType.getValue())) {
-				String contentWithoutComments = commentRemover.removeComments(zipInputStream, fileType.getValue());
+				byte[] buffer = sizeBuffer(zipEntry.getSize());
+				String contentWithoutComments = commentRemover.removeComments(zipInputStream, buffer, fileType.getValue());
 				ExtractionStrategy extractionStrategy = extractionStrategyProvider
 						.setExtractionStrategy(extractionStrategyType);
 				Set<String> words = extractionStrategy.extract(contentWithoutComments);
@@ -114,6 +115,28 @@ public class FileService {
 		}
 		directory.add(zipEntry.getName());
 	}
+
+//	private byte[] sizeBuffer(long fileSize) {
+//	    // 파일 크기를 기준으로 버퍼 크기를 설정합니다.
+//	    if (fileSize <= 1024) {
+//	        return new byte[1024]; // 1KB
+//	    } else if (fileSize <= 2048) {
+//	        return new byte[2048]; // 2KB
+//	    } else if (fileSize <= 3072) {
+//	        return new byte[3072]; // 3KB
+//	    } else {
+//	        return new byte[8192]; // 8KB
+//	    } 
+//	}
+	
+	private byte[] sizeBuffer(long fileSize) {
+	    int bufferSize = 1024;
+	    if (fileSize > 1024) {
+	        bufferSize = (int) Math.pow(2, Math.ceil(Math.log(fileSize) / Math.log(2)));
+	    }
+	    return new byte[bufferSize];
+	}
+
 
 	private boolean search(String filePath, Set<String> words, ZipFile zipFile) {
 		if (!words.isEmpty()) {
@@ -139,7 +162,7 @@ public class FileService {
 
 	private byte[] writeSearchResultToByteArray(Set<String> words, String filePath) {
 		try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-				BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(bos, 4096)) {
+				BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(bos, 1024)) {
 
 			bos.write(filePath.getBytes(StandardCharsets.UTF_8));
 			bos.write(System.lineSeparator().getBytes(StandardCharsets.UTF_8));
