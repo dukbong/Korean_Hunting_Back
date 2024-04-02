@@ -31,7 +31,7 @@ public class SecurityConfig {
 	
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-		http.authorizeHttpRequests(auth -> auth.requestMatchers("/login").permitAll() // 로그인
+		http.authorizeHttpRequests(auth -> auth.requestMatchers("/login", "/githublogin", "/githubcallback").permitAll() // 로그인
 				.requestMatchers("/join").permitAll() // 회원가입
 				.requestMatchers("/admin/**").hasRole("ADMIN") // 관리자 페이지
 				.requestMatchers("/actuator/**").hasRole("USER") // actuator >> metrics
