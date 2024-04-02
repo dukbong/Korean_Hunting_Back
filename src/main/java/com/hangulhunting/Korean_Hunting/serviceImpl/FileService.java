@@ -41,7 +41,7 @@ public class FileService {
 		ZipFile zipFile = new ZipFile();
 		List<String> directory = new ArrayList<>();
 //		List<ZipEntry> zipEntries = new ArrayList<>(); // 2차 방식
-		try (ZipInputStream zipInputStream = new ZipInputStream(new BufferedInputStream(file.getInputStream(), 1048576 /*1MB*/), StandardCharsets.UTF_8)) {
+		try (ZipInputStream zipInputStream = new ZipInputStream(new BufferedInputStream(file.getInputStream() /*1MB 1048576*/), StandardCharsets.UTF_8)) {
 			ZipEntry zipEntry;
 			while ((zipEntry = zipInputStream.getNextEntry()) != null) {
 				if (!zipEntry.isDirectory()) {
@@ -96,6 +96,7 @@ public class FileService {
 //		directory.add(zipEntry.getName());
 //	}
 
+	// O(N)
 	// 1차 방식 : FileType의 수가 적기 때문에 별도의 알고리즘 적용 x 추후 생각
 	private void processZipEntry(InputStream zipInputStream, ZipEntry zipEntry, List<String> directory, ZipFile zipFile, ExtractionStrategyType extractionStrategyType)
 			throws IOException {
@@ -154,10 +155,10 @@ public class FileService {
 	}
 
 	private byte[] combineByteArrays(byte[] array1, byte[] array2) {
-		ByteBuffer combinedBuffer = ByteBuffer.allocate(array1.length + array2.length);
-		combinedBuffer.put(array1);
-		combinedBuffer.put(array2);
-		return combinedBuffer.array();
+	    byte[] combined = new byte[array1.length + array2.length];
+	    System.arraycopy(array1, 0, combined, 0, array1.length);
+	    System.arraycopy(array2, 0, combined, array1.length, array2.length);
+	    return combined;
 	}
 
 	private byte[] writeSearchResultToByteArray(Set<String> words, String filePath) {
