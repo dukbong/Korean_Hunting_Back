@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveException;
@@ -105,34 +107,35 @@ public class FileService {
             throw new CustomException(ErrorCode.FILE_UNZIP_ERROR);
         }
     }
+	
+//	private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+//
 //    public ZipFile searchInFile(MultipartFile file, ExtractionStrategyType extractionStrategyType) {
 //        Map<String, Set<String>> textContent = new ConcurrentHashMap<>();
 //        ZipFile zipFile = new ZipFile();
-//        List<String> directory = new CopyOnWriteArrayList<>(); // 병렬 처리를 위해 스레드 안전한 리스트 사용
+//        List<String> directory = new ArrayList<>();
 //
 //        try (InputStream inputStream = file.getInputStream();
-//        	     BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream, 1048576);
-//        	     ArchiveInputStream<? extends ArchiveEntry> ais = new ArchiveStreamFactory().createArchiveInputStream(ArchiveStreamFactory.ZIP, bufferedInputStream)) {
-//
-//            ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+//             BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream, 1048576);
+//             ArchiveInputStream<? extends ArchiveEntry> ais = new ArchiveStreamFactory().createArchiveInputStream(ArchiveStreamFactory.ZIP, bufferedInputStream)) {
 //
 //            ArchiveEntry entry;
 //            while ((entry = ais.getNextEntry()) != null) {
 //                if (!entry.isDirectory()) {
 //                	final ArchiveEntry entryFinal = entry;
-//                    // 각 Zip 파일 항목을 병렬로 처리하여 작업 제출
-//                    Future<?> future = executorService.submit(() -> processZipEntry(ais, entryFinal, directory, textContent, extractionStrategyType));
-//                    future.get(); // 작업이 완료될 때까지 대기
+//                    // 작업을 스레드 풀에 제출
+//                    executor.execute(() -> processZipEntry(ais, entryFinal, directory, textContent, extractionStrategyType));
 //                }
 //            }
 //
-//            executorService.shutdown();
+//            // 스레드 풀 종료
+//            executor.shutdown();
 //
 //            zipFile.setContent(writeSearchResultToByteArray(textContent));
 //            zipFile.setDirectory(directory);
 //            return zipFile;
 //
-//        } catch (IOException | ArchiveException | InterruptedException | ExecutionException e) {
+//        } catch (IOException | ArchiveException e) {
 //            e.printStackTrace();
 //            throw new CustomException(ErrorCode.FILE_UNZIP_ERROR);
 //        }
@@ -166,7 +169,7 @@ public class FileService {
 		for (FileType fileType : FileType.values()) {
 			if (zipEntry.getName().endsWith(fileType.getValue())) {
 				String contentWithoutComments = commentRemover
-						.removeComments(ais/* , new byte[2048] */,new byte[4096], fileType.getValue());
+						.removeComments(ais/* , new byte[2048] */, /* new byte[4096], */ fileType.getValue());
 				// 2~8kb까지만 효과가 있음.
 				ExtractionStrategy extractionStrategy = extractionStrategyProvider
 						.setExtractionStrategy(extractionStrategyType);

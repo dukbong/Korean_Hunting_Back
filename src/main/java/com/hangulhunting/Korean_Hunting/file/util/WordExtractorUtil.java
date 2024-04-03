@@ -64,11 +64,10 @@ public class WordExtractorUtil {
 	
 	// O(N) 한줄씩
 	public static Set<String> extractWords(String contentWithoutComments, String regex, int groupIndex) {
-	    Set<String> words = new HashSet<>();
-	    try (BufferedReader reader = new BufferedReader(new StringReader(contentWithoutComments))) {
+		Set<String> words = new HashSet<>();
+	    try (BufferedReader reader = new BufferedReader(new StringReader(contentWithoutComments), 1024)) {
 	        String line;
 	        Pattern pattern = Pattern.compile(regex); // 정규식 패턴을 컴파일하여 재사용합니다.
-	        
 	        // 각 줄에 대해 정규식을 적용하여 매칭된 결과를 집합에 추가합니다.
 	        while ((line = reader.readLine()) != null) {
 	            Matcher matcher = pattern.matcher(line);

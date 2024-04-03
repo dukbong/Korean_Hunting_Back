@@ -1,6 +1,5 @@
 package com.hangulhunting.Korean_Hunting.controller;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.http.HttpHeaders;
