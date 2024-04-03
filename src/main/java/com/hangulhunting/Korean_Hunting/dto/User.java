@@ -5,6 +5,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 
 /***
@@ -23,16 +24,19 @@ public class User {
 	private String userPwd;
 	private String email;
 	private String company;
+	private String joinRoute;
 	
 	public UsernamePasswordAuthenticationToken toAuthentication() {
         return new UsernamePasswordAuthenticationToken(userId, userPwd);
     }
 
 	@Builder
-	public User(String userId, String userPwd, String email, String company) {
+	public User(String userId, String userPwd, String email, String company, String joinRoute) {
 		this.userId = userId;
 		this.userPwd = userPwd;
 		this.email = email;
 		this.company = company;
+		this.joinRoute = joinRoute;
 	}
+	
 }

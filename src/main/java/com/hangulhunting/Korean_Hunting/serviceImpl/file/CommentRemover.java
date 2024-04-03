@@ -32,27 +32,62 @@ public class CommentRemover {
 		commentPattern.put(".py", Pattern.compile("#.*|(?s)\"\"\".*?\"\"\"|(?s)'''.*?'''"));
 	}
 
+//	public String removeComments(InputStream zipInputStream , byte[] buffer , String fileType) {
+//	    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+//	        int bytesRead;
+//	        while ((bytesRead = zipInputStream.read( buffer )) != -1) {
+//	            outputStream.write( buffer, 0, bytesRead);
+//	        }
+//	        String fileContent = outputStream.toString(StandardCharsets.UTF_8);
+//	        Pattern pattern = commentPattern.get(fileType);
+//	        Matcher matcher = pattern.matcher(fileContent);
+//	        return matcher.replaceAll("");
+//	    } catch (IOException e) {
+//	        throw new CustomException(ErrorCode.FILE_REMOVE_COMMENT);
+//	    }
+//	}
 	public String removeComments(InputStream zipInputStream, byte[] buffer, String fileType) {
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		try {
-			int bytesRead;
-			while ((bytesRead = zipInputStream.read(buffer)) != -1) {
-				outputStream.write(buffer, 0, bytesRead);
-			}
-			Pattern pattern = commentPattern.get(fileType);
-			String fileContent = new String(outputStream.toByteArray(), StandardCharsets.UTF_8);
-			Matcher matcher = pattern.matcher(fileContent);
-			return matcher.replaceAll("");
-		} catch (IOException e) {
-			throw new CustomException(ErrorCode.FILE_REMOVE_COMMENT);
-		} finally {
-			try {
-				outputStream.close();
-			} catch (IOException e) {
-				log.error("ByteArrayOutputStream close error : {}", e);
-			}
-		}
+	    StringBuilder result = new StringBuilder();
+	    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+	        int bytesRead;
+	        while ((bytesRead = zipInputStream.read(buffer)) != -1) {
+	            outputStream.write(buffer, 0, bytesRead);
+	        }
+	        byte[] data = outputStream.toByteArray();
+	        String fileContent = new String(data, StandardCharsets.UTF_8);
+	        Pattern pattern = commentPattern.get(fileType);
+	        Matcher matcher = pattern.matcher(fileContent);
+	        int lastEnd = 0;
+	        while (matcher.find()) {
+	            result.append(fileContent, lastEnd, matcher.start());
+	            lastEnd = matcher.end();
+	        }
+	        result.append(fileContent, lastEnd, fileContent.length());
+	    } catch (IOException e) {
+	        throw new CustomException(ErrorCode.FILE_REMOVE_COMMENT);
+	    }
+	    return result.toString();
 	}
+
+
+	
+//    public String removeComments(InputStream zipInputStream, byte[] buffer, String fileType) {
+//        StringBuilder result = new StringBuilder();
+//        try (ReadableByteChannel channel = Channels.newChannel(zipInputStream)) {
+//            ByteBuffer byteBuffer = ByteBuffer.allocate(8192); // Adjust buffer size as needed
+//            while (channel.read(byteBuffer) > 0) {
+//                byteBuffer.flip();
+//                String fileContent = new String(byteBuffer.array(), 0, byteBuffer.limit(), "UTF-8");
+//                Pattern pattern = commentPattern.get(fileType);
+//                Matcher matcher = pattern.matcher(fileContent);
+//                result.append(matcher.replaceAll(""));
+//                byteBuffer.clear();
+//            }
+//            return result.toString();
+//        } catch (IOException e) {
+//            throw new CustomException(ErrorCode.FILE_REMOVE_COMMENT);
+//        }
+//    }
 	
 //	public String removeComments(InputStream zipInputStream, String fileType) {
 //        ExecutorService executorService = Executors.newSingleThreadExecutor();

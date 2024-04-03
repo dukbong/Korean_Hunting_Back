@@ -36,6 +36,7 @@ public class RegisterUserService {
 										  .userPwd(bCryptPasswordEncoder.encode(user.getUserPwd()))
 										  .email(user.getEmail())
 										  .company(user.getCompany())
+										  .joinRoute(user.getJoinRoute())
 										  .role(UserRole.ROLE_USER)
 										  .build();
 		userRepository.save(userEntity);

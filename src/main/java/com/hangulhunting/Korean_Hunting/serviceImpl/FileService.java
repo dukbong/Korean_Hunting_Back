@@ -1,18 +1,20 @@
 package com.hangulhunting.Korean_Hunting.serviceImpl;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.ArchiveException;
+import org.apache.commons.compress.archivers.ArchiveInputStream;
+import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -37,46 +39,105 @@ public class FileService {
 	private final CommentRemover commentRemover;
 	private final ExtractionStrategyProvider extractionStrategyProvider;
 
-	public ZipFile searchInFile(MultipartFile file, ExtractionStrategyType extractionStrategyType) {
-		ZipFile zipFile = new ZipFile();
-		List<String> directory = new ArrayList<>();
-//		List<ZipEntry> zipEntries = new ArrayList<>(); // 2차 방식
-		try (ZipInputStream zipInputStream = new ZipInputStream(new BufferedInputStream(file.getInputStream() /*1MB 1048576*/), StandardCharsets.UTF_8)) {
-			ZipEntry zipEntry;
-			while ((zipEntry = zipInputStream.getNextEntry()) != null) {
-				if (!zipEntry.isDirectory()) {
-//					zipEntries.add(zipEntry); // 2차 방식
-					processZipEntry(zipInputStream, zipEntry, directory, zipFile, extractionStrategyType); // 1차 방식
-				}
-				zipInputStream.closeEntry(); // 1차 방식
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new CustomException(ErrorCode.FILE_UNZIP_ERROR);
-		}
-		// 2차 방식 병렬 ---------------
-//		ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-//	    List<Future<?>> futures = new ArrayList<>();
+//	public ZipFile searchInFile(MultipartFile file, ExtractionStrategyType extractionStrategyType) {
+//		Map<String, Set<String>> textContent = new HashMap<>(); // writer method 한번만 호출하는걸로 바꾸기 위해
+//		ZipFile zipFile = new ZipFile();
+//		List<String> directory = new ArrayList<>();
+//		try (ZipInputStream zipInputStream = new ZipInputStream(new BufferedInputStream(file.getInputStream() /*65536*//*sizeBuffer(file.getSize()).length*/), StandardCharsets.UTF_8)) {
+//			ZipEntry zipEntry;
+//			while ((zipEntry = zipInputStream.getNextEntry()) != null) {
+//				if (!zipEntry.isDirectory()) {
+//					processZipEntry(zipInputStream, zipEntry, directory, /*zipFile*/ textContent, extractionStrategyType); // 1차 방식
+//				}
+//				zipInputStream.closeEntry(); // 1차 방식
+//			}
+//			zipFile.setContent(writeSearchResultToByteArray(textContent));
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//			throw new CustomException(ErrorCode.FILE_UNZIP_ERROR);
+//		}
+//		// 2차 방식 병렬 ---------------
+////		ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+////	    List<Future<?>> futures = new ArrayList<>();
+////
+////	    for (ZipEntry zipEntry : zipEntries) {
+////	        futures.add(executorService.submit(() -> processZipEntry(zipEntry, directory, zipFile, extractionStrategyType)));
+////	    }
+////
+////	    // 모든 작업이 완료될 때까지 대기
+////	    for (Future<?> future : futures) {
+////	        try {
+////	            future.get();
+////	        } catch (InterruptedException | ExecutionException e) {
+////	            e.printStackTrace();
+////	            throw new CustomException(ErrorCode.FILE_PROCESSING_ERROR);
+////	        }
+////	    }
+////
+////	    executorService.shutdown();
+//	    // 2차 방식 병렬 ---------------
+//		zipFile.setDirectory(directory);
+//		return zipFile;
+//	}
+	
+    public ZipFile searchInFile(MultipartFile file, ExtractionStrategyType extractionStrategyType) {
+        Map<String, Set<String>> textContent = new ConcurrentHashMap<>();
+        ZipFile zipFile = new ZipFile();
+        List<String> directory = new ArrayList<>();
+
+        try (InputStream inputStream = file.getInputStream();
+        	 BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream, 1048576);
+        	 ArchiveInputStream<? extends ArchiveEntry> ais = new ArchiveStreamFactory().createArchiveInputStream(ArchiveStreamFactory.ZIP, bufferedInputStream)) {
+
+            ArchiveEntry entry;
+            while ((entry = ais.getNextEntry()) != null) {
+                if (!entry.isDirectory()) {
+                	processZipEntry(ais, entry, directory, textContent, extractionStrategyType);
+                }
+            }
+
+            zipFile.setContent(writeSearchResultToByteArray(textContent));
+            zipFile.setDirectory(directory);
+            return zipFile;
+
+        } catch (IOException | ArchiveException e) {
+            e.printStackTrace();
+            throw new CustomException(ErrorCode.FILE_UNZIP_ERROR);
+        }
+    }
+//    public ZipFile searchInFile(MultipartFile file, ExtractionStrategyType extractionStrategyType) {
+//        Map<String, Set<String>> textContent = new ConcurrentHashMap<>();
+//        ZipFile zipFile = new ZipFile();
+//        List<String> directory = new CopyOnWriteArrayList<>(); // 병렬 처리를 위해 스레드 안전한 리스트 사용
 //
-//	    for (ZipEntry zipEntry : zipEntries) {
-//	        futures.add(executorService.submit(() -> processZipEntry(zipEntry, directory, zipFile, extractionStrategyType)));
-//	    }
+//        try (InputStream inputStream = file.getInputStream();
+//        	     BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream, 1048576);
+//        	     ArchiveInputStream<? extends ArchiveEntry> ais = new ArchiveStreamFactory().createArchiveInputStream(ArchiveStreamFactory.ZIP, bufferedInputStream)) {
 //
-//	    // 모든 작업이 완료될 때까지 대기
-//	    for (Future<?> future : futures) {
-//	        try {
-//	            future.get();
-//	        } catch (InterruptedException | ExecutionException e) {
-//	            e.printStackTrace();
-//	            throw new CustomException(ErrorCode.FILE_PROCESSING_ERROR);
-//	        }
-//	    }
+//            ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 //
-//	    executorService.shutdown();
-	    // 2차 방식 병렬 ---------------
-		zipFile.setDirectory(directory);
-		return zipFile;
-	}
+//            ArchiveEntry entry;
+//            while ((entry = ais.getNextEntry()) != null) {
+//                if (!entry.isDirectory()) {
+//                	final ArchiveEntry entryFinal = entry;
+//                    // 각 Zip 파일 항목을 병렬로 처리하여 작업 제출
+//                    Future<?> future = executorService.submit(() -> processZipEntry(ais, entryFinal, directory, textContent, extractionStrategyType));
+//                    future.get(); // 작업이 완료될 때까지 대기
+//                }
+//            }
+//
+//            executorService.shutdown();
+//
+//            zipFile.setContent(writeSearchResultToByteArray(textContent));
+//            zipFile.setDirectory(directory);
+//            return zipFile;
+//
+//        } catch (IOException | ArchiveException | InterruptedException | ExecutionException e) {
+//            e.printStackTrace();
+//            throw new CustomException(ErrorCode.FILE_UNZIP_ERROR);
+//        }
+//    }
+
 	
 	// 2차 방식
 //	private void processZipEntry(ZipEntry zipEntry, List<String> directory, ZipFile zipFile, ExtractionStrategyType extractionStrategyType) {
@@ -98,23 +159,39 @@ public class FileService {
 
 	// O(N)
 	// 1차 방식 : FileType의 수가 적기 때문에 별도의 알고리즘 적용 x 추후 생각
-	private void processZipEntry(InputStream zipInputStream, ZipEntry zipEntry, List<String> directory, ZipFile zipFile, ExtractionStrategyType extractionStrategyType)
-			throws IOException {
+	private void processZipEntry(ArchiveInputStream<? extends ArchiveEntry> ais, ArchiveEntry zipEntry, List<String> directory, /*ZipFile zipFile*/ Map<String, Set<String>> textContent, ExtractionStrategyType extractionStrategyType)
+//	private void processZipEntry(InputStream ais, ZipEntry zipEntry, List<String> directory, /*ZipFile zipFile*/ Map<String, Set<String>> textContent, ExtractionStrategyType extractionStrategyType)
+			 {
+		boolean found = false;
 		for (FileType fileType : FileType.values()) {
 			if (zipEntry.getName().endsWith(fileType.getValue())) {
-				byte[] buffer = sizeBuffer(zipEntry.getSize());
-				String contentWithoutComments = commentRemover.removeComments(zipInputStream, buffer, fileType.getValue());
+				String contentWithoutComments = commentRemover
+						.removeComments(ais/* , new byte[2048] */,new byte[4096], fileType.getValue());
+				// 2~8kb까지만 효과가 있음.
 				ExtractionStrategy extractionStrategy = extractionStrategyProvider
 						.setExtractionStrategy(extractionStrategyType);
 				Set<String> words = extractionStrategy.extract(contentWithoutComments);
-				if (search(zipEntry.getName(), words, zipFile)) {
+//				if (search(zipEntry.getName(), words, zipFile)) {
+//					directory.add(zipEntry.getName() + FileStatus._$INSERT);
+//				} else {
+//					directory.add(zipEntry.getName());
+//				}
+				if (!words.isEmpty()) {
 					directory.add(zipEntry.getName() + FileStatus._$INSERT);
+					// 여기서 textContent에 put 해주기
+					textContent.put(zipEntry.getName(), words);
 				} else {
 					directory.add(zipEntry.getName());
 				}
+				found = true;
+				break;
 			}
 		}
-		directory.add(zipEntry.getName());
+		
+		if(!found) {
+			directory.add(zipEntry.getName());
+		}
+		
 	}
 
 //	private byte[] sizeBuffer(long fileSize) {
@@ -130,55 +207,64 @@ public class FileService {
 //	    } 
 //	}
 	
-	private byte[] sizeBuffer(long fileSize) {
-	    int bufferSize = 1024;
-	    if (fileSize > 1024) {
-	        bufferSize = (int) Math.pow(2, Math.ceil(Math.log(fileSize) / Math.log(2)));
-	    }
-	    return new byte[bufferSize];
-	}
+//	private byte[] sizeBuffer(long fileSize) {
+//	    return new byte[(int) (fileSize * 0.05)];
+//	}
 
 
-	private boolean search(String filePath, Set<String> words, ZipFile zipFile) {
-		if (!words.isEmpty()) {
-			if (zipFile.getContent() != null) {
-				byte[] result = writeSearchResultToByteArray(words, filePath);
-				byte[] existingContent = zipFile.getContent();
-				byte[] combinedContent = combineByteArrays(existingContent, result);
-				zipFile.setContent(combinedContent);
-			} else {
-				zipFile.setContent(writeSearchResultToByteArray(words, filePath));
-			}
-			return true;
-		}
-		return false;
-	}
+//	private boolean search(String filePath, Set<String> words, ZipFile zipFile) {
+//		if (!words.isEmpty()) {
+//			if (zipFile.getContent() != null) {
+//				byte[] result = writeSearchResultToByteArray(words, filePath);
+//				byte[] existingContent = zipFile.getContent();
+//				byte[] combinedContent = combineByteArrays(existingContent, result);
+//				zipFile.setContent(combinedContent);
+//			} else {
+//				zipFile.setContent(writeSearchResultToByteArray(words, filePath));
+//			}
+//			return true;
+//		}
+//		return false;
+//	}
+//
+//	private byte[] combineByteArrays(byte[] array1, byte[] array2) {
+//	    byte[] combined = new byte[array1.length + array2.length];
+//	    System.arraycopy(array1, 0, combined, 0, array1.length);
+//	    System.arraycopy(array2, 0, combined, array1.length, array2.length);
+//	    return combined;
+//	}
 
-	private byte[] combineByteArrays(byte[] array1, byte[] array2) {
-	    byte[] combined = new byte[array1.length + array2.length];
-	    System.arraycopy(array1, 0, combined, 0, array1.length);
-	    System.arraycopy(array2, 0, combined, array1.length, array2.length);
-	    return combined;
-	}
-
-	private byte[] writeSearchResultToByteArray(Set<String> words, String filePath) {
+	private byte[] writeSearchResultToByteArray(
+			/* Set<String> words */ Map<String, Set<String>> textContent/* , String filePath */) {
+		
 		try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-				BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(bos, 1024)) {
+		/* ObjectOutputStream oos=new ObjectOutputStream(bos); */) {
+			
+//			oos.writeObject(textContent);
+//			bos.write(filePath.getBytes(StandardCharsets.UTF_8));
+//			bos.write(System.lineSeparator().getBytes(StandardCharsets.UTF_8));
 
-			bos.write(filePath.getBytes(StandardCharsets.UTF_8));
-			bos.write(System.lineSeparator().getBytes(StandardCharsets.UTF_8));
-
-			int count = 1;
-			for (String word : words) {
-				String line = (count++) + ". " + word + System.lineSeparator();
-				bufferedOutputStream.write(line.getBytes(StandardCharsets.UTF_8));
-			}
-			bufferedOutputStream.flush();
-			return bos.toByteArray();
+//			for (String word : words) {
+//				String line = (count++) + ". " + word + System.lineSeparator();
+//				bufferedOutputStream.write(line.getBytes(StandardCharsets.UTF_8));
+//			}
+//			try(BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(bos, sizeBuffer(bos.size()).length);){
+				for(Map.Entry<String, Set<String>> entry : textContent.entrySet()) {
+					bos.write(entry.getKey().getBytes(StandardCharsets.UTF_8));
+					bos.write(System.lineSeparator().getBytes(StandardCharsets.UTF_8));
+					int count = 1;
+					for(String val : entry.getValue()) {
+						bos.write(((count++) + ". " + val + System.lineSeparator()).getBytes(StandardCharsets.UTF_8));
+					}
+				}
+				return bos.toByteArray();
+//			}
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new CustomException(ErrorCode.FILE_WRITE_ERROR);
 		}
+		
+		
 	}
 	
 }

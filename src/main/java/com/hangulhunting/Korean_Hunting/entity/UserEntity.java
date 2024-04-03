@@ -31,6 +31,7 @@ public class UserEntity {
 	@Column(nullable = false)
 	private String email;
 	private String company;
+	private String joinRoute;
 	@Enumerated(EnumType.STRING)
 	private UserRole role;
 	
@@ -41,7 +42,7 @@ public class UserEntity {
 	private ApiTokenEntity apiTokenEntity;
 	
 	@Builder
-	public UserEntity(Long id, String userId, String userPwd, String email, String company, UserRole role) {
+	public UserEntity(Long id, String userId, String userPwd, String email, String company, String joinRoute, UserRole role) {
 		super();
 		this.id = id;
 		this.userId = userId;
@@ -49,6 +50,7 @@ public class UserEntity {
 		this.email = email;
 		this.company = company;
 		this.role = role;
+		this.joinRoute = joinRoute;
 	}
 	
 	

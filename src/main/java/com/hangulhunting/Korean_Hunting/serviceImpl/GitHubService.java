@@ -23,8 +23,10 @@ import com.hangulhunting.Korean_Hunting.jwt.etc.TokenETC;
 import com.hangulhunting.Korean_Hunting.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class GitHubService {
 
@@ -43,10 +45,11 @@ public class GitHubService {
         return Collections.singletonMap("githubAuthUrl", githubAuthUrl);
     }
 
-    public Map<String, String> handleGitHubCallback(Map<String, String> payload) {
+    public User handleGitHubCallback(Map<String, String> payload) {
         String code = payload.get("code");
         String accessToken = getAccessToken(code);
         String userInfoResponseBody = getUserInfo(accessToken);
+        log.info(userInfoResponseBody);
         return processUserInfo(userInfoResponseBody);
     }
 
@@ -101,24 +104,18 @@ public class GitHubService {
         }
     }
 
-    private Map<String, String> processUserInfo(String userInfoResponseBody) {
+    private User processUserInfo(String userInfoResponseBody) {
         try {
             JsonNode jsonNode = new ObjectMapper().readTree(userInfoResponseBody);
             String login = jsonNode.get("login").asText();
             Optional<UserEntity> findUserEntity = userRepository.findByUserId(login);
             String email = jsonNode.get("email").asText();
             String id = jsonNode.get("id").asText();
-            User user = User.builder().userId(login).userPwd(id).email(email).build();
+            User user = User.builder().userId(login).userPwd(id).email(email).joinRoute("GitHub").build();
             if (!findUserEntity.isPresent()) {
                 userService.registerUser(user);
             }
-            String loginResult = authenticationService.loginProcess(user);
-            HttpHeaders header = new HttpHeaders();
-            header.add(TokenETC.AUTHORIZATION, TokenETC.PREFIX + loginResult);
-            Map<String, String> map = new HashMap<>();
-            map.put("message", "Login Success");
-            map.put("userId", user.getUserId());
-            return map;
+            return user;
         } catch (IOException e) {
             e.printStackTrace();
             return null;

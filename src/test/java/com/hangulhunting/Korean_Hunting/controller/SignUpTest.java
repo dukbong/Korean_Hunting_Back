@@ -38,7 +38,7 @@ public class SignUpTest {
 	@DisplayName("비정상 로그인 : 이미 사용 중인 ID입니다.")
 	void userIdAlredyExists() {
 		// given
-		User user = new User("test1", "1234", "test1@gmail.com", "iit");
+		User user = new User("test1", "1234", "test1@gmail.com", "iit", "");
 		Mockito.when(userService.registerUser(user))
 			   .thenThrow(new CustomException(ErrorCode.NAME_ALREADY_EXISTS, user.getUserId()));
 		
@@ -57,7 +57,7 @@ public class SignUpTest {
 	@DisplayName("비정상 로그인 : ID는 빈문자열 || Null")
 	void userIdEmptyOrNull() {
 		// given
-		User user = new User("", "1234", "test1@gmail.com", "iit");
+		User user = new User("", "1234", "test1@gmail.com", "iit", "");
 		Mockito.when(userService.registerUser(user)).thenThrow(new CustomException(ErrorCode.MEMBER_IDS_IS_EMPTY_OR_NULL, user.getUserId()));
 		
 		// when
@@ -75,7 +75,7 @@ public class SignUpTest {
 	@DisplayName("정상 로그인")
 	void join() {
 	    // given
-	    User user = new User("test1", "1234", "test1@gmail.com", "iit");
+	    User user = new User("test1", "1234", "test1@gmail.com", "iit", "");
 	    Mockito.when(userService.registerUser(user)).thenReturn(new UserResDto("회원가입에 성공하였습니다."));
 
 	    // when
