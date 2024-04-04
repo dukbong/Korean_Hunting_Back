@@ -1,11 +1,8 @@
 package com.hangulhunting.Korean_Hunting.serviceImpl.file;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import com.hangulhunting.Korean_Hunting.exception.CustomException;
 import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
+import com.hangulhunting.Korean_Hunting.file.util.BufferedInputStreamDecorator;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,29 +34,61 @@ public class CommentRemover {
 	}
 
 //	사용중
+//	public String removeComments(InputStream zipInputStream, String fileType) {
+//	    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+//	        byte[] buffer = new byte[4096]; // 버퍼 크기를 조정하여 성능 향상
+//	        int bytesRead;
+//	        while ((bytesRead = zipInputStream.read(buffer)) != -1) {
+//	            outputStream.write(buffer, 0, bytesRead);
+//	        }
+//	        String fileContent = outputStream.toString(StandardCharsets.UTF_8);
+//	        Pattern pattern = commentPattern.get(fileType);
+//	        Matcher matcher = pattern.matcher(fileContent);
+//
+//	        StringBuffer result = new StringBuffer(); // Matcher의 appendReplacement 및 appendTail을 사용하기 위한 StringBuffer
+//
+//	        int lastEnd = 0;
+//	        while (matcher.find()) {
+//	            result.append(fileContent, lastEnd, matcher.start());
+//	            lastEnd = matcher.end();
+//	        }
+//	        result.append(fileContent, lastEnd, fileContent.length());
+//
+//	        return result.toString();
+//	    } catch (IOException e) {
+//	        throw new CustomException(ErrorCode.FILE_REMOVE_COMMENT);
+//	    }
+//	}
+	
+	
 	public String removeComments(InputStream zipInputStream, String fileType) {
-	    StringBuilder result = new StringBuilder();
-	    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+	    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+	         BufferedInputStreamDecorator bufferedInputStream = new BufferedInputStreamDecorator(zipInputStream)) {
+	        byte[] buffer = new byte[4096]; // 버퍼 크기를 조정하여 성능 향상
 	        int bytesRead;
-	        byte[] buffer = new byte[2048];
-	        while ((bytesRead = zipInputStream.read(buffer)) != -1) {
+	        while ((bytesRead = bufferedInputStream.read(buffer)) != -1) {
 	            outputStream.write(buffer, 0, bytesRead);
 	        }
-	        byte[] data = outputStream.toByteArray();
-	        String fileContent = new String(data, StandardCharsets.UTF_8);
+	        String fileContent = outputStream.toString(StandardCharsets.UTF_8);
 	        Pattern pattern = commentPattern.get(fileType);
 	        Matcher matcher = pattern.matcher(fileContent);
+
+	        StringBuffer result = new StringBuffer(); // Matcher의 appendReplacement 및 appendTail을 사용하기 위한 StringBuffer
+
 	        int lastEnd = 0;
 	        while (matcher.find()) {
 	            result.append(fileContent, lastEnd, matcher.start());
 	            lastEnd = matcher.end();
 	        }
 	        result.append(fileContent, lastEnd, fileContent.length());
+
+	        return result.toString();
 	    } catch (IOException e) {
 	        throw new CustomException(ErrorCode.FILE_REMOVE_COMMENT);
 	    }
-	    return result.toString();
 	}
+
+	
 	
 //	public String removeComments(InputStream zipInputStream, String fileType) {
 //        ExecutorService executorService = Executors.newSingleThreadExecutor();

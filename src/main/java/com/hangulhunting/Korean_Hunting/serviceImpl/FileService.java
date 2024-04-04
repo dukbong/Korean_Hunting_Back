@@ -1,6 +1,7 @@
 package com.hangulhunting.Korean_Hunting.serviceImpl;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,8 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveException;
@@ -166,10 +165,23 @@ public class FileService {
 //	private void processZipEntry(InputStream ais, ZipEntry zipEntry, List<String> directory, /*ZipFile zipFile*/ Map<String, Set<String>> textContent, ExtractionStrategyType extractionStrategyType)
 			 {
 		boolean found = false;
+		String contentWithoutComments = null;
 		for (FileType fileType : FileType.values()) {
 			if (zipEntry.getName().endsWith(fileType.getValue())) {
-				String contentWithoutComments = commentRemover
-						.removeComments(ais/* , new byte[2048] */, /* new byte[4096], */ fileType.getValue());
+				
+				try(ByteArrayOutputStream baos = new ByteArrayOutputStream()){
+					byte[] buffer = new byte[4096]; // 적절한 버퍼 크기를 선택합니다.
+		            int bytesRead;
+		            
+		            while ((bytesRead = ais.read(buffer)) != -1) {
+	                    baos.write(buffer, 0, bytesRead);
+	                }
+		            contentWithoutComments = commentRemover
+		            		.removeComments(new ByteArrayInputStream(baos.toByteArray())/* , new byte[2048] */, /* new byte[4096], */ fileType.getValue());
+				} catch(IOException e) {
+					e.printStackTrace();
+				}
+				
 				// 2~8kb까지만 효과가 있음.
 				ExtractionStrategy extractionStrategy = extractionStrategyProvider
 						.setExtractionStrategy(extractionStrategyType);
