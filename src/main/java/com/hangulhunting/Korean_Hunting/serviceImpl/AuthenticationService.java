@@ -171,8 +171,7 @@ public class AuthenticationService {
 		
 		Pageable pageRequest = PageRequest.of(pageable.getPageNumber() - 1, 10);
 
-		Page<ProjectBuildHistory> projectBuildHistoryPage = projectBuildHistoryRepository.findByUserEntity(userEntity,
-				pageRequest);
+		Page<ProjectBuildHistory> projectBuildHistoryPage = projectBuildHistoryRepository.findByUserEntity(userEntity, pageRequest);
 
 		Page<ProjectBuildHistoryDto> projectBuildHistoryDtoPage = projectBuildHistoryPage.map(this::convertToDto);
 		
