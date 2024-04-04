@@ -1,4 +1,11 @@
 #!/bin/bash
+project_name = $1
+
+if [ -z "$project_name" ]; then
+    echo -e "\033[31mProject name is missing. Please check again.\033[0m"
+    exit 1
+fi
+
 file_path="./source_code_io/token.txt"
 if [ -f "$file_path" ]; then
     token=$(grep -o 'token=[^ ]*' "$file_path" | cut -d'=' -f2)
@@ -37,7 +44,7 @@ echo "--------------------------------------------------"
 echo -e "\033[1;32m> Completing project Compression!!!\033[0m"
 echo "--------------------------------------------------"
 echo
-response=$(curl -X POST -H "Authorization: Bearer $token_value" -F "file=@$current_dir/$zip_file" http://localhost:8888/api/upload)
+response=$(curl -X POST -H "Authorization: Bearer $token_value" -F "file=@$current_dir/$zip_file" -F "projectName=$project_name" http://localhost:8888/api/upload)
 echo "--------------------------------------------------"
 rm "$current_dir/$zip_file"
 echo -e "\033[1;32mDeleted compressed files successfully!!!\033[0m"

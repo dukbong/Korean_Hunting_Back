@@ -2,6 +2,8 @@ package com.hangulhunting.Korean_Hunting.controller;
 
 import java.util.Map;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hangulhunting.Korean_Hunting.dto.GitHub;
+import com.hangulhunting.Korean_Hunting.dto.ProjectBuildHistoryDto;
+import com.hangulhunting.Korean_Hunting.dto.ProjectBuildHistoryInfo;
 import com.hangulhunting.Korean_Hunting.dto.User;
 import com.hangulhunting.Korean_Hunting.dto.UserInfo;
 import com.hangulhunting.Korean_Hunting.dto.response.UserResDto;
@@ -66,9 +70,16 @@ public class BasicController {
 	}
 
 	@GetMapping("/info")
-	public ResponseEntity<Object> userInfo() {
+	public ResponseEntity<UserInfo> userInfo() {
 		UserInfo userInfo = authenticationService.userInfo();
 		return ResponseEntity.ok().body(userInfo);
+	}
+	
+	@GetMapping("/buildHistory")
+	public ResponseEntity<Page<ProjectBuildHistoryDto>> buildHistory(Pageable pageable){
+		Page<ProjectBuildHistoryDto> projectBuildHistoryInfo = authenticationService.buildHistory(pageable);
+//		return ResponseEntity.ok().header("X-Total-Pages", String.valueOf(projectBuildHistoryInfo.getTotalPage())).body(projectBuildHistoryInfo.getProjectBuildHistorys());
+		return ResponseEntity.ok().body(projectBuildHistoryInfo);
 	}
 
 }

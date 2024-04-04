@@ -37,9 +37,7 @@ public class ApiTokenEntity {
 	private String tokenExpiresIn;
 	
 	@Builder
-	public ApiTokenEntity(Long id, UserEntity userEntity, String apiToken, LocalDate issuanceTime, String tokenExpiresIn) {
-		super();
-		this.id = id;
+	public ApiTokenEntity(UserEntity userEntity, String apiToken, LocalDate issuanceTime, String tokenExpiresIn) {
 		this.userEntity = userEntity;
 		this.apiToken = apiToken;
 		this.issuanceTime = issuanceTime;

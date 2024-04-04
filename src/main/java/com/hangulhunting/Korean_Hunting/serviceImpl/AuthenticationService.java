@@ -2,21 +2,28 @@ package com.hangulhunting.Korean_Hunting.serviceImpl;
 
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.hangulhunting.Korean_Hunting.dto.ProjectBuildHistoryDto;
+import com.hangulhunting.Korean_Hunting.dto.ProjectBuildHistoryInfo;
 import com.hangulhunting.Korean_Hunting.dto.User;
 import com.hangulhunting.Korean_Hunting.dto.UserInfo;
 import com.hangulhunting.Korean_Hunting.dto.token.TokenDto;
+import com.hangulhunting.Korean_Hunting.entity.ProjectBuildHistory;
 import com.hangulhunting.Korean_Hunting.entity.RefreshToken;
 import com.hangulhunting.Korean_Hunting.entity.UserEntity;
 import com.hangulhunting.Korean_Hunting.exception.CustomException;
 import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
 import com.hangulhunting.Korean_Hunting.jwt.TokenProvider;
 import com.hangulhunting.Korean_Hunting.jwt.etc.TokenETC;
+import com.hangulhunting.Korean_Hunting.repository.ProjectBuildHistoryRepository;
 import com.hangulhunting.Korean_Hunting.repository.UserRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,6 +37,7 @@ public class AuthenticationService {
 	private final RefreshTokenService refreshTokenService;
 	private final BlackListService blackListService;
 	private final AuthenticationManagerBuilder authenticationManagerBuilder;
+	private final ProjectBuildHistoryRepository projectBuildHistoryRepository;
 	private final TokenProvider tokenProvider;
 	private final UserRepository userRepository;
 
@@ -43,41 +51,39 @@ public class AuthenticationService {
 		Authentication authentication = authenticateUser(user);
 		TokenDto tokenDto = generateToken(authentication);
 		handleRefreshToken(authentication, tokenDto);
-		return tokenDto.getAccessToken();	
+		return tokenDto.getAccessToken();
 	}
 
 	/**
 	 * RefreshToken을 처리하는 서비스
 	 * 
 	 * @param authentication 사용자 인증 정보
-	 * @param tokenDto 토큰 DTO
+	 * @param tokenDto       토큰 DTO
 	 */
 	private void handleRefreshToken(Authentication authentication, TokenDto tokenDto) {
 		UserEntity userEntity = findUserEntity(authentication);
-	    Optional<RefreshToken> optionalRefreshToken = Optional.ofNullable(userEntity.getRefreshToken());
-	    if (optionalRefreshToken.isPresent() && !tokenProvider.validateToken(optionalRefreshToken.get().getValue())) {
-	   		refreshTokenService.deleteByValue(optionalRefreshToken.get().getValue());
-	   		saveRefreshToken(tokenDto, userEntity);
-	    }
-	    optionalRefreshToken.orElseGet(() -> saveRefreshToken(tokenDto, userEntity));
+		Optional<RefreshToken> optionalRefreshToken = Optional.ofNullable(userEntity.getRefreshToken());
+		if (optionalRefreshToken.isPresent() && !tokenProvider.validateToken(optionalRefreshToken.get().getValue())) {
+			refreshTokenService.deleteByValue(optionalRefreshToken.get().getValue());
+			saveRefreshToken(tokenDto, userEntity);
+		}
+		optionalRefreshToken.orElseGet(() -> saveRefreshToken(tokenDto, userEntity));
 	}
-	
+
 	/**
 	 * 새로운 RefreshToken을 저장하는 메소드입니다.
 	 * 
-	 * @param tokenDto 토큰 DTO
+	 * @param tokenDto   토큰 DTO
 	 * @param userEntity 사용자 엔터티
 	 * @return 저장된 RefreshToken 객체
 	 */
 	private RefreshToken saveRefreshToken(TokenDto tokenDto, UserEntity userEntity) {
-	    RefreshToken newRefreshToken = RefreshToken.builder()
-										           .value(tokenDto.getRefreshToken())
-										           .userEntity(userEntity)
-										           .build();
-	    refreshTokenService.save(newRefreshToken);
-	    return newRefreshToken;
+		RefreshToken newRefreshToken = RefreshToken.builder().value(tokenDto.getRefreshToken()).userEntity(userEntity)
+				.build();
+		refreshTokenService.save(newRefreshToken);
+		return newRefreshToken;
 	}
-	
+
 	/**
 	 * 사용자 엔터티를 찾는 메소드입니다.
 	 * 
@@ -86,10 +92,10 @@ public class AuthenticationService {
 	 * @throws CustomException 사용자를 찾지 못했을 때 발생하는 예외
 	 */
 	private UserEntity findUserEntity(Authentication authentication) {
-	    return userRepository.findByUserId(authentication.getName())
-	            .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND_INFO));
+		return userRepository.findByUserId(authentication.getName())
+				.orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND_INFO));
 	}
-	
+
 	/**
 	 * 사용자를 인증하는 메소드입니다.
 	 * 
@@ -103,7 +109,7 @@ public class AuthenticationService {
 		// authenticate 메소드가 실행시 CustomUserDetailsService에서 만들었던 loadUserByUsername 실행
 		return authenticationManagerBuilder.getObject().authenticate(authenticationToken);
 	}
-	
+
 	/**
 	 * 토큰을 생성하는 메소드입니다.
 	 * 
@@ -113,7 +119,7 @@ public class AuthenticationService {
 	private TokenDto generateToken(Authentication authentication) {
 		return tokenProvider.generateTokenDto(authentication);
 	}
-	
+
 	/**
 	 * 현재 인증된 사용자의 정보를 가져오는 서비스
 	 * 
@@ -125,14 +131,17 @@ public class AuthenticationService {
 		String userId = authentication.getName();
 		UserEntity userEntity = userRepository.findByUserId(userId)
 				.orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND_INFO));
-		UserInfo userInfo = UserInfo.builder()
-								.userId(userEntity.getUserId())
-								.email(userEntity.getEmail())
-								.company(userEntity.getCompany())
-								.apiToken(userEntity.getApiTokenEntity() != null ? userEntity.getApiTokenEntity().getApiToken() : null)
-								.issuanceTime(userEntity.getApiTokenEntity() != null ? userEntity.getApiTokenEntity().getIssuanceTime() : null)
-								.tokenExpiresIn(userEntity.getApiTokenEntity() != null ? userEntity.getApiTokenEntity().getTokenExpiresIn() : null)
-								.build();
+
+		UserInfo userInfo = UserInfo.builder().userId(userEntity.getUserId()).email(userEntity.getEmail())
+				.company(userEntity.getCompany())
+				.apiToken(userEntity.getApiTokenEntity() != null ? userEntity.getApiTokenEntity().getApiToken() : null)
+				.issuanceTime(userEntity.getApiTokenEntity() != null ? userEntity.getApiTokenEntity().getIssuanceTime()
+						: null)
+				.tokenExpiresIn(
+						userEntity.getApiTokenEntity() != null ? userEntity.getApiTokenEntity().getTokenExpiresIn()
+								: null)
+//								.projectBuildHistory(projectBuildHistoryDtos)
+				.build();
 		return userInfo;
 	}
 
@@ -153,5 +162,35 @@ public class AuthenticationService {
 		if (userEntity.isPresent()) {
 			refreshTokenService.deleteByValue(userEntity.get().getRefreshToken().getValue());
 		}
+	}
+
+	public Page<ProjectBuildHistoryDto> buildHistory(Pageable pageable) {
+		String username = getUsernameFromSecurityContext();
+		UserEntity userEntity = userRepository.findByUserId(username)
+				.orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND_INFO));
+		
+		Pageable pageRequest = PageRequest.of(pageable.getPageNumber() - 1, 10);
+
+		Page<ProjectBuildHistory> projectBuildHistoryPage = projectBuildHistoryRepository.findByUserEntity(userEntity,
+				pageRequest);
+
+		Page<ProjectBuildHistoryDto> projectBuildHistoryDtoPage = projectBuildHistoryPage.map(this::convertToDto);
+		
+		return projectBuildHistoryDtoPage;
+	}
+
+	// ProjectBuildHistory를 ProjectBuildHistoryDto로 변환하는 메소드
+	private ProjectBuildHistoryDto convertToDto(ProjectBuildHistory projectBuildHistory) {
+		return ProjectBuildHistoryDto.builder().id(projectBuildHistory.getId())
+				.projectName(projectBuildHistory.getProjectName()).buildTime(projectBuildHistory.getBuildTime())
+				.status(projectBuildHistory.isStatus()).build();
+	}
+
+	private String getUsernameFromSecurityContext() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		if (authentication != null) {
+			return authentication.getName();
+		}
+		return null;
 	}
 }

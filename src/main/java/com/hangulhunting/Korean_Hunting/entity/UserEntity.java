@@ -1,7 +1,11 @@
 package com.hangulhunting.Korean_Hunting.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.hangulhunting.Korean_Hunting.entity.enumpackage.UserRole;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -9,6 +13,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.SequenceGenerator;
 import lombok.AccessLevel;
@@ -21,7 +26,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class UserEntity {
-	
+
 	@Id
 	@GeneratedValue(generator = "user_entity_seq_generator")
 	private Long id;
@@ -34,17 +39,18 @@ public class UserEntity {
 	private String joinRoute;
 	@Enumerated(EnumType.STRING)
 	private UserRole role;
-	
+
 	@OneToOne(fetch = FetchType.LAZY, mappedBy = "userEntity")
 	private RefreshToken refreshToken;
-	
+
 	@OneToOne(fetch = FetchType.LAZY, mappedBy = "userEntity")
 	private ApiTokenEntity apiTokenEntity;
-	
+
+	@OneToMany(mappedBy = "userEntity", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private List<ProjectBuildHistory> projectBuildHistories = new ArrayList<>();
+
 	@Builder
-	public UserEntity(Long id, String userId, String userPwd, String email, String company, String joinRoute, UserRole role) {
-		super();
-		this.id = id;
+	public UserEntity(String userId, String userPwd, String email, String company, String joinRoute, UserRole role) {
 		this.userId = userId;
 		this.userPwd = userPwd;
 		this.email = email;
@@ -53,6 +59,8 @@ public class UserEntity {
 		this.joinRoute = joinRoute;
 	}
 	
-	
-	
+	public void addProjectBuildHistory(ProjectBuildHistory projectBuildHistory) {
+		this.projectBuildHistories.add(projectBuildHistory);
+	}
+
 }
