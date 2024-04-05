@@ -37,7 +37,8 @@ dependencies {
 	// compileOnly group: 'org.jboss.windup.decompiler', name: 'decompiler-fernflower', version: '6.3.6.Final'
 	
 	compileOnly 'org.projectlombok:lombok'
-	runtimeOnly 'com.h2database:h2'
+	runtimeOnly 'com.mysql:mysql-connector-j'
+//	runtimeOnly 'com.h2database:h2'
 //	runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
