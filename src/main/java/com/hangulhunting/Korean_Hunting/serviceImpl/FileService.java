@@ -191,15 +191,29 @@ public class FileService {
 //				} else {
 //					directory.add(zipEntry.getName());
 //				}
-				if (!words.isEmpty()) {
-					directory.add(zipEntry.getName() + FileStatus._$INSERT);
-					// 여기서 textContent에 put 해주기
-					textContent.put(zipEntry.getName(), words);
-				} else {
+				
+//				if (!words.isEmpty()) {
+//					directory.add(zipEntry.getName() + FileStatus._$INSERT);
+//					// 여기서 textContent에 put 해주기
+//					textContent.put(zipEntry.getName(), words);
+//				} else {
+//					directory.add(zipEntry.getName());
+//				}
+//				found = true;
+//				break;
+				
+				if(words.isEmpty()) {
 					directory.add(zipEntry.getName());
+					found=true;
+					break;
 				}
-				found = true;
+				
+				directory.add(zipEntry.getName() + FileStatus._$INSERT);
+				textContent.put(zipEntry.getName(), words);
+				found=true;
 				break;
+				
+				
 			}
 		}
 		
