@@ -1,5 +1,6 @@
 package com.hangulhunting.Korean_Hunting.serviceImpl.file;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,7 +14,6 @@ import org.springframework.stereotype.Component;
 
 import com.hangulhunting.Korean_Hunting.exception.CustomException;
 import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
-import com.hangulhunting.Korean_Hunting.file.util.BufferedInputStreamDecorator;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -63,7 +63,7 @@ public class CommentRemover {
 	
 	public String removeComments(InputStream zipInputStream, String fileType) {
 	    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-	         BufferedInputStreamDecorator bufferedInputStream = new BufferedInputStreamDecorator(zipInputStream)) {
+	         BufferedInputStream bufferedInputStream = new BufferedInputStream(zipInputStream)) {
 	        byte[] buffer = new byte[4096]; // 버퍼 크기를 조정하여 성능 향상
 	        int bytesRead;
 	        while ((bytesRead = bufferedInputStream.read(buffer)) != -1) {
