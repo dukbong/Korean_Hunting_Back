@@ -27,14 +27,21 @@ public class RegisterUserService {
 	public UserResDto registerUser(User user) {
 
 		validateUserId(user.getUserId());
-
-		validateUserPwd(user.getUserPwd());
-
+		
+		checkJoinRoute(user);
+		
 		validateEmail(user.getEmail());
 
 		userRepository.save(convertDtoToEntity(user));
 
 		return new UserResDto("회원가입을 축하드립니다.");
+	}
+	
+	private void checkJoinRoute(User user) {
+		boolean check = user.getJoinRoute() == null || user.getJoinRoute().isEmpty();
+		if(check) {
+			validateUserPwd(user.getUserPwd());
+		}
 	}
 
 	private UserEntity convertDtoToEntity(User user) {

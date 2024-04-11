@@ -43,6 +43,7 @@ public class RegisterUserServiceTDD {
 	 * 8. 비밀번호에는 숫자가 1개 이상 들어가야한다.
 	 * 9. 비밀번호에는 특수문자가 1개 이상 들어가야한다.
 	 * 10. 비밀번호는 8자 이상이여야한다.
+	 * 11. github 로그인 하는 경우 비밀번호의 유효성 검사는 하지 않는다.
 	 */
 	
 	@Test
@@ -212,6 +213,29 @@ public class RegisterUserServiceTDD {
 			return;
 		}
 		
+	}
+	
+	@ParameterizedTest
+	@ValueSource(strings = {"", "GitHub"})
+	public void testGithubLoginWithoutPasswordValidation(String joinRoute) {
+		// given
+		User user = User.builder().userId("test").userPwd("aes45898t1").company("testCompany1").email("test@gmail.com").joinRoute(joinRoute).build();
+		
+		// when
+		if(joinRoute.isEmpty()) {
+			RuntimeException runTimeException = assertUserRegistrationFails(user);
+			// then
+			Assertions.assertEquals("비밀번호는 대문자를 한개 이상 포함해야합니다.", runTimeException.getMessage());
+		}
+		
+		// when
+		if(!joinRoute.isEmpty()) {
+			try {
+				registerUserService.registerUser(user);
+			} catch (Exception e) {
+				Assertions.fail("예외가 발생하지 않아야 합니다.");
+			}
+		}
 	}
 	
 	private RuntimeException assertUserRegistrationFails(User user) {

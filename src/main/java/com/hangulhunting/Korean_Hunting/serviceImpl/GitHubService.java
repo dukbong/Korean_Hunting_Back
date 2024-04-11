@@ -31,8 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 public class GitHubService {
 
     private final UserRepository userRepository;
-    private final RegisterUserService userService;
-    private final AuthenticationService authenticationService;
+    private final RegisterUserService registerUserService;
 
     @Value("${github.clientId}")
     private String clientId;
@@ -113,7 +112,7 @@ public class GitHubService {
             String id = jsonNode.get("id").asText();
             User user = User.builder().userId(login).userPwd(id).email(email).joinRoute("GitHub").build();
             if (!findUserEntity.isPresent()) {
-                userService.registerUser(user);
+            	registerUserService.registerUser(user);
             }
             return user;
         } catch (IOException e) {
