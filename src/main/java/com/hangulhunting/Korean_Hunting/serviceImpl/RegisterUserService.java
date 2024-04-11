@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.hangulhunting.Korean_Hunting.dto.User;
 import com.hangulhunting.Korean_Hunting.dto.response.UserResDto;
 import com.hangulhunting.Korean_Hunting.entity.UserEntity;
+import com.hangulhunting.Korean_Hunting.entity.enumpackage.Regex;
 import com.hangulhunting.Korean_Hunting.entity.enumpackage.UserRole;
 import com.hangulhunting.Korean_Hunting.exception.CustomException;
 import com.hangulhunting.Korean_Hunting.exception.ErrorCode;
@@ -23,70 +24,71 @@ public class RegisterUserService {
 	private final UserRepository userRepository;
 	private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
-	/**
-	 * 사용자 등록을 처리하는 서비스
-	 * 
-	 * @param user 등록할 사용자 정보
-	 * @return 사용자 등록 결과
-	 */
 	public UserResDto registerUser(User user) {
-		validateUser(user);
-		UserEntity userEntity = UserEntity.builder()
-										  .userId(user.getUserId())
-										  .userPwd(bCryptPasswordEncoder.encode(user.getUserPwd()))
-										  .email(user.getEmail())
-										  .company(user.getCompany())
-										  .joinRoute(user.getJoinRoute())
-										  .role(UserRole.ROLE_USER)
-										  .build();
-		userRepository.save(userEntity);
-		return new UserResDto("회원가입에 성공하였습니다.");
+
+		validateUserId(user.getUserId());
+
+		validateUserPwd(user.getUserPwd());
+
+		validateEmail(user.getEmail());
+
+		userRepository.save(convertDtoToEntity(user));
+
+		return new UserResDto("회원가입을 축하드립니다.");
 	}
 
-	/**
-	 * 사용자 정보 유효성을 검증하는 서비스
-	 * 
-	 * @param user 사용자 정보
-	 */
-	private void validateUser(User user) {
-		if (userRepository.existsByUserId(user.getUserId())) {
-			throw new CustomException(ErrorCode.NAME_ALREADY_EXISTS, user.getUserId());
+	private UserEntity convertDtoToEntity(User user) {
+		return UserEntity.builder().userId(user.getUserId())
+								   .userPwd(bCryptPasswordEncoder.encode(user.getUserPwd()))
+								   .company(user.getCompany())
+								   .email(user.getEmail())
+								   .joinRoute(user.getJoinRoute())
+								   .role(UserRole.ROLE_USER).build();
+	}
+
+	private void validateUserId(String userId) {
+		if (userId == null || userId.isEmpty()) {
+			throw new CustomException(ErrorCode.USER_ID_REQUIRED);
 		}
 
-		if (isNullOrBlank(user.getUserId())) {
-			throw new CustomException(ErrorCode.MEMBER_IDS_IS_EMPTY_OR_NULL, user.getUserId());
-		}
-
-		if (isNullOrBlank(user.getUserPwd())) {
-			throw new CustomException(ErrorCode.MEMBER_PWD_IS_EMPTY_OR_NULL, user.getUserPwd());
-		}
-
-		if (isValidEmail(user.getEmail())) {
-			throw new CustomException(ErrorCode.INVALID_EMAIL, user.getEmail());
+		boolean result = userRepository.existsByUserId(userId);
+		if (result) {
+			throw new CustomException(ErrorCode.DUPLICATE_ID);
 		}
 	}
 
-	/**
-	 * 주어진 문자열이 null이거나 공백인지 확인하는 서비스
-	 * 
-	 * @param str 확인할 문자열
-	 * @return 주어진 문자열이 null이거나 공백이면 true, 아니면 false
-	 */
-	private boolean isNullOrBlank(String str) {
-		return str == null || str.isEmpty();
+	private void validateUserPwd(String pwd) {
+		if (pwd == null || pwd.isEmpty()) {
+			throw new CustomException(ErrorCode.USER_PWD_REQUIRED);
+		}
+
+		if (pwd.length() < 8) {
+			throw new CustomException(ErrorCode.PASSWORD_LENGTH);
+		}
+
+		if (!pwd.matches(Regex.UPPERCASE.getRegex())) {
+			throw new CustomException(ErrorCode.PASSWORD_UPPERCASE);
+		}
+
+		if (!pwd.matches(Regex.LOWERCASE.getRegex())) {
+			throw new CustomException(ErrorCode.PASSWORD_LOWERCASE);
+		}
+
+		if (!pwd.matches(Regex.SPECIAL_CHARACTER.getRegex())) {
+			throw new CustomException(ErrorCode.PASSWORD_SPECIAL_CHARACTER);
+		}
 	}
 
-	/**
-	 * 주어진 이메일 주소가 유효한 형식인지 확인하는 서비스
-	 * 
-	 * @param email 확인할 이메일 주소
-	 * @return 유효한 이메일 주소면 true, 아니면 false
-	 */
-	private boolean isValidEmail(String email) {
-		String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
-		Pattern pattern = Pattern.compile(emailRegex);
+	private void validateEmail(String email) {
+		if (email == null || email.isEmpty()) {
+			throw new CustomException(ErrorCode.USER_EMAIL_REQUIRED);
+		}
+
+		Pattern pattern = Pattern.compile(Regex.EMAIL_REGEX.getRegex());
 		Matcher matcher = pattern.matcher(email);
-		return !matcher.matches();
-	}
 
+		if (!matcher.matches()) {
+			throw new CustomException(ErrorCode.EMAIL_FORMAT);
+		}
+	}
 }

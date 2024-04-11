@@ -30,6 +30,17 @@ public enum ErrorCode {
 	FILE_EXTRACT_WORD(HttpStatus.INTERNAL_SERVER_ERROR, "분석 과정에서 오류가 발생했습니다."),
 	FILE_REMOVE_COMMENT(HttpStatus.INTERNAL_SERVER_ERROR, "주석 제거 작업 중 오류가 발생하였습니다."),
 	
+	/* 회원가입 관련 에러 메시지 모음 */
+	USER_ID_REQUIRED(HttpStatus.BAD_REQUEST, "아이디는 필수 입력 사항입니다."),
+	USER_PWD_REQUIRED(HttpStatus.BAD_REQUEST, "비밀번호는 필수 입력 사항입니다."),
+	USER_EMAIL_REQUIRED(HttpStatus.BAD_REQUEST, "이메일은 필수 입력 사항입니다."),
+	DUPLICATE_ID(HttpStatus.BAD_REQUEST, "아이디가 중복되었습니다."),
+	PASSWORD_LENGTH(HttpStatus.BAD_REQUEST, "비밀번호는 8자리 이상이여야 합니다."),
+	PASSWORD_UPPERCASE(HttpStatus.BAD_REQUEST, "비밀번호는 대문자를 한개 이상 포함해야합니다."),
+	PASSWORD_LOWERCASE(HttpStatus.BAD_REQUEST, "비밀번호는 소문자를 한개 이상 포함해야합니다."),
+	PASSWORD_SPECIAL_CHARACTER(HttpStatus.BAD_REQUEST, "비밀번호는 특수문자를 한개 이상 포함해야합니다."),
+	EMAIL_FORMAT(HttpStatus.BAD_REQUEST, "이메일 형식을 지켜야 합니다."),
+	
 	/* 404 NOT FOUND : Resource 를 찾을 수 없음 */
 	MEMBER_NOT_FOUND_BY_ID(HttpStatus.NOT_FOUND, "해당 멤버 ID가 없습니다: %s"),
 	MEMBER_NOT_FOUND_INFO(HttpStatus.NOT_FOUND, "해당 멤버 ID의 정보를 불러올 수 없습니다. : %s");
