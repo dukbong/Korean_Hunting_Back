@@ -1,12 +1,11 @@
 #!/bin/bash
-project_name = $1
-
-if [ -z "$project_name" ]; then
-    echo -e "\033[31mProject name is missing. Please check again.\033[0m"
+file_path="./source_code_io/token.txt"
+task_name=$(grep -oP '(?<=task=).*' ./source_code_io/task.txt)
+if [ -z "$task_name" ]; then
+    echo "Task name is empty. Exiting."
     exit 1
 fi
 
-file_path="./source_code_io/token.txt"
 if [ -f "$file_path" ]; then
     token=$(grep -o 'token=[^ ]*' "$file_path" | cut -d'=' -f2)
     if [ -z "$token" ]; then
@@ -44,7 +43,8 @@ echo "--------------------------------------------------"
 echo -e "\033[1;32m> Completing project Compression!!!\033[0m"
 echo "--------------------------------------------------"
 echo
-response=$(curl -X POST -H "Authorization: Bearer $token_value" -F "file=@$current_dir/$zip_file" -F "projectName=$project_name" http://localhost:8888/api/upload)
+response=$(curl -X POST -H "Authorization: Bearer $token_value" -F "file=@$current_dir/$zip_file" -F "projectName=$project_name" http://localhost:8998/api/upload)
+echo "test = " + $response
 echo "--------------------------------------------------"
 rm "$current_dir/$zip_file"
 echo -e "\033[1;32mDeleted compressed files successfully!!!\033[0m"
@@ -83,6 +83,41 @@ else
     echo
     if [[ "$input" == "N" || "$input" == "n" ]]; then
         echo -e "\e[91mAborting a build task due to a user request.\e[0m"
-        exit 1 
+        exit 0
+    else
+        echo -e "\033[1;33mKorean text was found in the source code, but I will proceed with the build.\033[0m"
+        if [ "$task_name" == "build" ]; then
+            echo "Executing build task..."
+            ./gradlew build
+        elif [ "$task_name" == "clean" ]; then
+            echo "Executing clean task..."
+            ./gradlew clean
+        elif [ "$task_name" == "test" ]; then
+            echo "Executing test task..."
+            ./gradlew test
+        elif [ "$task_name" == "integrationTest" ]; then
+            echo "Executing integrationTest task..."
+            ./gradlew integrationTest
+        elif [ "$task_name" == "check" ]; then
+            echo "Executing check task..."
+            ./gradlew check
+        elif [ "$task_name" == "javadoc" ]; then
+            echo "Executing javadoc task..."
+            ./gradlew javadoc
+        elif [ "$task_name" == "dokka" ]; then
+            echo "Executing dokka task..."
+            ./gradlew dokka
+        elif [ "$task_name" == "dependencies" ]; then
+            echo "Executing dependencies task..."
+            ./gradlew dependencies
+        elif [ "$task_name" == "assemble" ]; then
+            echo "Executing assemble task..."
+            ./gradlew assemble
+        elif [ "$task_name" == "publish" ]; then
+            echo "Executing publish task..."
+            ./gradlew publish
+        else
+            echo "Unknown option: $task_name"
+        fi
     fi
 fi

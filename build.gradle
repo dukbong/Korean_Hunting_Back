@@ -30,6 +30,7 @@ dependencies {
 	implementation 'io.micrometer:micrometer-registry-prometheus'
 	implementation 'org.apache.commons:commons-compress:1.26.1'
 
+implementation 'com.google.code.gson:gson:2.8.8'
 	
 	// https://mvnrepository.com/artifact/org.xerial.snappy/snappy-java >> 고속 압축
 	// implementation 'org.xerial.snappy:snappy-java:1.1.10.5'
@@ -38,7 +39,7 @@ dependencies {
 	
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'com.mysql:mysql-connector-j'
-//	runtimeOnly 'com.h2database:h2'
+	runtimeOnly 'com.h2database:h2'
 //	runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'

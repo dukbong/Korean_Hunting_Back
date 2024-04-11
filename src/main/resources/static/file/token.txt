@@ -1,1 +1,1 @@
-token=
+token=eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJkdWtib25nIiwiYXV0aCI6IlJPTEVfQVBJIiwiZXhwIjoxNzEzNDA3MjMyfQ.j87BHKKb1-rrWZVc59j__EtRnVjwDs9sCn-HG8rzr7c9QeVLDyBwtR3H7YV6-C8TSjwdvf9hCSLG7CDxsZI_ng

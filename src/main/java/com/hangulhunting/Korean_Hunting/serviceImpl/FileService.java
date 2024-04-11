@@ -19,6 +19,8 @@ import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.hangulhunting.Korean_Hunting.dto.ZipFile;
 import com.hangulhunting.Korean_Hunting.entity.enumpackage.ExtractionStrategyType;
 import com.hangulhunting.Korean_Hunting.entity.enumpackage.FileStatus;
@@ -263,37 +265,54 @@ public class FileService {
 //	    return combined;
 //	}
 
-	private byte[] writeSearchResultToByteArray(
-			/* Set<String> words */ Map<String, Set<String>> textContent/* , String filePath */) {
-		
-		try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-		/* ObjectOutputStream oos=new ObjectOutputStream(bos); */) {
-			
-//			oos.writeObject(textContent);
-//			bos.write(filePath.getBytes(StandardCharsets.UTF_8));
-//			bos.write(System.lineSeparator().getBytes(StandardCharsets.UTF_8));
+//	private byte[] writeSearchResultToByteArray(
+//			/* Set<String> words */ Map<String, Set<String>> textContent/* , String filePath */) {
+//		
+//		try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+//		/* ObjectOutputStream oos=new ObjectOutputStream(bos); */) {
+//			
+////			oos.writeObject(textContent);
+////			bos.write(filePath.getBytes(StandardCharsets.UTF_8));
+////			bos.write(System.lineSeparator().getBytes(StandardCharsets.UTF_8));
+//
+////			for (String word : words) {
+////				String line = (count++) + ". " + word + System.lineSeparator();
+////				bufferedOutputStream.write(line.getBytes(StandardCharsets.UTF_8));
+////			}
+////			try(BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(bos, sizeBuffer(bos.size()).length);){
+//				for(Map.Entry<String, Set<String>> entry : textContent.entrySet()) {
+//					bos.write(entry.getKey().getBytes(StandardCharsets.UTF_8));
+//					bos.write(System.lineSeparator().getBytes(StandardCharsets.UTF_8));
+//					int count = 1;
+//					for(String val : entry.getValue()) {
+//						bos.write(((count++) + ". " + val + System.lineSeparator()).getBytes(StandardCharsets.UTF_8));
+//					}
+//				}
+//				return bos.toByteArray();
+////			}
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//			throw new CustomException(ErrorCode.FILE_WRITE_ERROR);
+//		}
+//		
+//		
+//	}
+	
+    private byte[] writeSearchResultToByteArray(Map<String, Set<String>> textContent) {
+    	if(textContent.size() <= 0) {
+    		return null;
+    	}
+    	Gson gson = new GsonBuilder().setPrettyPrinting().create(); // Gson 객체 생성 시 Pretty Printing 설정
+    	try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+    		String json = gson.toJson(textContent);
+    		byte[] jsonBytes = json.getBytes(StandardCharsets.UTF_8);
+    		bos.write(jsonBytes);
+    		return bos.toByteArray();
+    	} catch (IOException e) {
+    		e.printStackTrace();
+    		throw new CustomException(ErrorCode.FILE_WRITE_ERROR);
+    	}
+    }
 
-//			for (String word : words) {
-//				String line = (count++) + ". " + word + System.lineSeparator();
-//				bufferedOutputStream.write(line.getBytes(StandardCharsets.UTF_8));
-//			}
-//			try(BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(bos, sizeBuffer(bos.size()).length);){
-				for(Map.Entry<String, Set<String>> entry : textContent.entrySet()) {
-					bos.write(entry.getKey().getBytes(StandardCharsets.UTF_8));
-					bos.write(System.lineSeparator().getBytes(StandardCharsets.UTF_8));
-					int count = 1;
-					for(String val : entry.getValue()) {
-						bos.write(((count++) + ". " + val + System.lineSeparator()).getBytes(StandardCharsets.UTF_8));
-					}
-				}
-				return bos.toByteArray();
-//			}
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new CustomException(ErrorCode.FILE_WRITE_ERROR);
-		}
-		
-		
-	}
 	
 }
