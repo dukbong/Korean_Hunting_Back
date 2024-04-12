@@ -30,7 +30,6 @@ dependencies {
 	implementation 'io.micrometer:micrometer-registry-prometheus'
 	implementation 'org.apache.commons:commons-compress:1.26.1'
 
-implementation 'com.google.code.gson:gson:2.8.8'
 	
 	// https://mvnrepository.com/artifact/org.xerial.snappy/snappy-java >> 고속 압축
 	// implementation 'org.xerial.snappy:snappy-java:1.1.10.5'
