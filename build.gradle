@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.2.2'
 	id 'io.spring.dependency-management' version '1.1.4'
+	id 'me.champeau.jmh' version '0.6.2'
 }
 
 group = 'com.hangulhunting'
@@ -29,17 +30,11 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'io.micrometer:micrometer-registry-prometheus'
 	implementation 'org.apache.commons:commons-compress:1.26.1'
-
-	
-	// https://mvnrepository.com/artifact/org.xerial.snappy/snappy-java >> 고속 압축
-	// implementation 'org.xerial.snappy:snappy-java:1.1.10.5'
-	// https://mvnrepository.com/artifact/org.jboss.windup.decompiler/decompiler-fernflower
-	// compileOnly group: 'org.jboss.windup.decompiler', name: 'decompiler-fernflower', version: '6.3.6.Final'
-	
+	jmh 'org.openjdk.jmh:jmh-core:1.32'
+    jmh 'org.openjdk.jmh:jmh-generator-annprocess:1.32'
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'com.mysql:mysql-connector-j'
 	runtimeOnly 'com.h2database:h2'
-//	runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
@@ -51,4 +46,10 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+jmh {
+	fork=1
+	warmupIterations=10
+	iterations=10
 }
