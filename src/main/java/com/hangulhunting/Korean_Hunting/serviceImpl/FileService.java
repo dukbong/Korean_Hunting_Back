@@ -11,12 +11,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import org.apache.commons.compress.archivers.ArchiveEntry;
-import org.apache.commons.compress.archivers.ArchiveException;
-import org.apache.commons.compress.archivers.ArchiveInputStream;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -43,6 +43,8 @@ public class FileService {
 	private final CommentRemover commentRemover;
 	private final ExtractionStrategyProvider extractionStrategyProvider;
     private static final int BUFFER_SIZE = 1024 * 1024; // 1MB 버퍼 사이즈
+    private static final ExecutorService executorService = Executors.newFixedThreadPool(10); // 적절한 스레드 풀 크기 선택
+
 
     @Async
     public CompletableFuture<ZipFile> searchInFileAsync(MultipartFile file, ExtractionStrategyType extractionStrategyType) {
@@ -59,12 +61,25 @@ public class FileService {
 //        	 ArchiveInputStream<? extends ArchiveEntry> ais = new ArchiveStreamFactory().createArchiveInputStream(ArchiveStreamFactory.ZIP, bufferedInputStream)) {
         		ZipInputStream zipInputStream = new ZipInputStream(bufferedInputStream)) {
 
+//        	List<Future<?>> futures = new ArrayList<>();
         	ZipEntry entry;
             while ((entry = zipInputStream.getNextEntry()) != null) {
                 if (!entry.isDirectory()) {
                 	processZipEntry(zipInputStream, entry, directory, textContent, extractionStrategyType);
                 }
             }
+        	
+//            while ((entry = zipInputStream.getNextEntry()) != null) {
+//                if (!entry.isDirectory()) {
+//                	final ZipEntry finalEntry = entry;
+//                    Future<?> future = executorService.submit(() -> processZipEntry(zipInputStream, finalEntry, directory, textContent, extractionStrategyType));
+//                    futures.add(future);
+//                }
+//            }
+//            
+//            for (Future<?> future : futures) {
+//                future.get();
+//            }
 
             zipFile.setContent(writeSearchResultToByteArray(textContent));
             zipFile.setDirectory(directory);
@@ -73,7 +88,7 @@ public class FileService {
         } catch (IOException e) {
             e.printStackTrace();
             throw new CustomException(ErrorCode.FILE_UNZIP_ERROR);
-        } 
+        }
     }
     
 	private void processZipEntry(ZipInputStream ais, ZipEntry zipEntry, List<String> directory, Map<String, Set<String>> textContent, ExtractionStrategyType extractionStrategyType)
@@ -84,7 +99,7 @@ public class FileService {
 			if (zipEntry.getName().endsWith(fileType.getValue())) {
 				
 				try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-				    byte[] buffer = new byte[BUFFER_SIZE]; // 적절한 버퍼 크기를 선택합니다.
+				    byte[] buffer = new byte[16384]; // 적절한 버퍼 크기를 선택합니다.
 				    int bytesRead;
 				    
 				    while ((bytesRead = ais.read(buffer)) != -1) {
