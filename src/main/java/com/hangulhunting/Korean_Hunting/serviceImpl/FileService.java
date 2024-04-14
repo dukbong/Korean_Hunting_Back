@@ -6,16 +6,17 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveException;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
-import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -41,27 +42,27 @@ public class FileService {
 
 	private final CommentRemover commentRemover;
 	private final ExtractionStrategyProvider extractionStrategyProvider;
-	
+    private static final int BUFFER_SIZE = 1024 * 1024; // 1MB 버퍼 사이즈
+
     @Async
     public CompletableFuture<ZipFile> searchInFileAsync(MultipartFile file, ExtractionStrategyType extractionStrategyType) {
-        return CompletableFuture.supplyAsync(() -> {
-            return searchInFile(file, extractionStrategyType);
-        });
+        return CompletableFuture.supplyAsync(() -> searchInFile(file, extractionStrategyType));
     }
 
     public ZipFile searchInFile(MultipartFile file, ExtractionStrategyType extractionStrategyType) {
-        Map<String, Set<String>> textContent = new ConcurrentHashMap<>();
+        Map<String, Set<String>> textContent = new HashMap<>();
         ZipFile zipFile = new ZipFile();
         List<String> directory = new ArrayList<>();
 
         try (InputStream inputStream = file.getInputStream();
-        	 BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream, /*1048576*/ 65536);
-        	 ArchiveInputStream<? extends ArchiveEntry> ais = new ArchiveStreamFactory().createArchiveInputStream(ArchiveStreamFactory.ZIP, bufferedInputStream)) {
+        	 BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream, BUFFER_SIZE);
+//        	 ArchiveInputStream<? extends ArchiveEntry> ais = new ArchiveStreamFactory().createArchiveInputStream(ArchiveStreamFactory.ZIP, bufferedInputStream)) {
+        		ZipInputStream zipInputStream = new ZipInputStream(bufferedInputStream)) {
 
-            ArchiveEntry entry;
-            while ((entry = ais.getNextEntry()) != null) {
+        	ZipEntry entry;
+            while ((entry = zipInputStream.getNextEntry()) != null) {
                 if (!entry.isDirectory()) {
-                	processZipEntry(ais, entry, directory, textContent, extractionStrategyType);
+                	processZipEntry(zipInputStream, entry, directory, textContent, extractionStrategyType);
                 }
             }
 
@@ -69,35 +70,34 @@ public class FileService {
             zipFile.setDirectory(directory);
             return zipFile;
 
-        } catch (IOException | ArchiveException e) {
+        } catch (IOException e) {
             e.printStackTrace();
             throw new CustomException(ErrorCode.FILE_UNZIP_ERROR);
         } 
     }
-	
-	private void processZipEntry(ArchiveInputStream<? extends ArchiveEntry> ais, ArchiveEntry zipEntry, List<String> directory, Map<String, Set<String>> textContent, ExtractionStrategyType extractionStrategyType)
+    
+	private void processZipEntry(ZipInputStream ais, ZipEntry zipEntry, List<String> directory, Map<String, Set<String>> textContent, ExtractionStrategyType extractionStrategyType)
 			 {
 		boolean found = false;
 		String contentWithoutComments = null;
 		for (FileType fileType : FileType.values()) {
 			if (zipEntry.getName().endsWith(fileType.getValue())) {
 				
-				try(ByteArrayOutputStream baos = new ByteArrayOutputStream()){
-					byte[] buffer = new byte[65536]; // 적절한 버퍼 크기를 선택합니다.
-		            int bytesRead;
-		            StringBuilder contentWithoutCommentsBuilder = new StringBuilder();
-		            while ((bytesRead = ais.read(buffer)) != -1) {
-//	                    baos.write(buffer, 0, bytesRead);
-		            	contentWithoutCommentsBuilder.append(new String(buffer, 0, bytesRead));
-	                    
-	                }
-//		            contentWithoutComments = commentRemover
-//		            		.removeComments(new ByteArrayInputStream(baos.toByteArray())/* , new byte[2048] */, /* new byte[4096], */ fileType.getValue());
-		            contentWithoutComments = commentRemover.removeComments(
-		                    new ByteArrayInputStream(contentWithoutCommentsBuilder.toString().getBytes()),
-		                    fileType.getValue());
-				} catch(IOException e) {
-					e.printStackTrace();
+				try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+				    byte[] buffer = new byte[BUFFER_SIZE]; // 적절한 버퍼 크기를 선택합니다.
+				    int bytesRead;
+				    
+				    while ((bytesRead = ais.read(buffer)) != -1) {
+				        baos.write(buffer, 0, bytesRead);
+				    }
+				    
+				    byte[] contentWithoutCommentsBytes = baos.toByteArray();
+				    contentWithoutComments = commentRemover.removeComments(
+				        new ByteArrayInputStream(contentWithoutCommentsBytes),
+				        fileType.getValue()
+				    );
+				} catch (IOException e) {
+				    e.printStackTrace();
 				}
 				
 				// 2~8kb까지만 효과가 있음.

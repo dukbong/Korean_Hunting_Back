@@ -20,9 +20,17 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/file")
 @RequiredArgsConstructor
 public class FileController {
-	
+
 	private final FileService fileService;
 
+//	@PostMapping("/upload")
+//	public ResponseEntity<ZipFile> fileUpload(@RequestParam("file") MultipartFile file,
+//			@RequestParam("extractionStrategyType") ExtractionStrategyType extractionStrategyType) {
+//		ZipFile zipFile = fileService.searchInFile(file, extractionStrategyType);
+//		return ResponseEntity.ok(zipFile);
+//	}
+	
+	
     @PostMapping("/upload")
     public ResponseEntity<ZipFile> fileUpload(@RequestParam("file") MultipartFile file,
                                                   @RequestParam("extractionStrategyType") ExtractionStrategyType extractionStrategyType) {

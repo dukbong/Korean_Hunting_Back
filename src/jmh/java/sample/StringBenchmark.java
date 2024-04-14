@@ -1,77 +1,90 @@
 package sample;
 
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-
 import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.BenchmarkMode;
-import org.openjdk.jmh.annotations.Mode;
-import org.openjdk.jmh.annotations.OutputTimeUnit;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
-
 @State(Scope.Thread)
 public class StringBenchmark {
+	
+    private String[] patterns;
 
-    private static final int MAP_SIZE = 1000; // Adjust size as needed
-    private static final Gson gson = new Gson();
-    private Map<String, Set<String>> textContent;
-    
     @Setup
     public void setup() {
-    	textContent = generateMap();
-    }
-
-    private Map<String, Set<String>> generateMap() {
-    	Random random = new Random();
-    	Map<String, Set<String>> map = new HashMap<>();
-    	
-    	for (int i = 0; i < MAP_SIZE; i++) {
-    		String key = "Key" + i;
-    		Set<String> values = new HashSet<>();
-    		int numValues = random.nextInt(10); // 임의의 값 생성
-    		
-    		for (int j = 0; j < numValues; j++) {
-    			values.add("Value" + random.nextInt(100));
-    		}
-    		
-    		map.put(key, values);
-    	}
-    	
-    	return map;
-    }
-    
-    @Benchmark
-    @BenchmarkMode(Mode.AverageTime)
-    @OutputTimeUnit(TimeUnit.MILLISECONDS)
-    public byte[] jacksonSerialization() {
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.writeValue(bos, textContent);
-            return bos.toByteArray();
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Failed to write JSON to byte array", e);
+        patterns = new String[1000];
+        for (int i = 0; i < 1000; i++) {
+            patterns[i] = "   pattern" + i + "   ";
         }
     }
-    
+
     @Benchmark
-    @BenchmarkMode(Mode.AverageTime)
-    @OutputTimeUnit(TimeUnit.MILLISECONDS)
-    public byte[] gsonSerialization() {
-        return gson.toJson(textContent).getBytes();
+    public void originalImplementation() {
+        String[] result = new String[patterns.length];
+        for (int i = 0; i < patterns.length; i++) {
+            result[i] = patterns[i].strip();
+        }
     }
+
+    @Benchmark
+    public void streamImplementation() {
+        String[] result = java.util.Arrays.stream(patterns)
+                .map(String::strip)
+                .toArray(String[]::new);
+    }
+	
+//	 private static final byte[] ZIP_DATA;
+//    
+//    static {
+//        try (InputStream inputStream = StringBenchmark.class.getResourceAsStream("/FileTEST.zip")) {
+//            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//            byte[] buffer = new byte[1024*1024];
+//            int bytesRead;
+//            while ((bytesRead = inputStream.read(buffer)) != -1) {
+//                baos.write(buffer, 0, bytesRead);
+//            }
+//            ZIP_DATA = baos.toByteArray();
+//        } catch (IOException e) {
+//            throw new RuntimeException("Failed to read FileTEST.zip", e);
+//        }
+//    }
+//
+//    @Benchmark
+//    public void decompressWithApacheCommons() throws IOException, ArchiveException {
+//        try (InputStream inputStream = new ByteArrayInputStream(ZIP_DATA);
+//             ArchiveInputStream<? extends ArchiveEntry> ais = new ArchiveStreamFactory().createArchiveInputStream(ArchiveStreamFactory.ZIP, inputStream)) {
+//
+//            ArchiveEntry entry;
+//            while ((entry = ais.getNextEntry()) != null) {
+//                byte[] buffer = new byte[1024*1024];
+//                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//                int bytesRead;
+//
+//                while ((bytesRead = ais.read(buffer)) != -1) {
+//                    baos.write(buffer, 0, bytesRead);
+//                }
+//            }
+//        }
+//    }
+//
+//    @Benchmark
+//    public void decompressWithJavaZip() throws IOException {
+//        try (InputStream inputStream = new ByteArrayInputStream(ZIP_DATA);
+//             ZipInputStream zipInputStream = new ZipInputStream(inputStream)) {
+//
+//            ZipEntry entry;
+//            while ((entry = zipInputStream.getNextEntry()) != null) {
+//                byte[] buffer = new byte[1024*1024];
+//                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//                int bytesRead;
+//
+//                while ((bytesRead = zipInputStream.read(buffer)) != -1) {
+//                    baos.write(buffer, 0, bytesRead);
+//                }
+//            }
+//        }
+//    }
 
 }
 
