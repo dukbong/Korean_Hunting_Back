@@ -55,7 +55,6 @@ public class CommentRemover {
 	            lastEnd = matcher.end();
 	        }
 	        result.append(fileContent, lastEnd, fileContent.length());
-
 	        return result.toString();
 	    } catch (IOException e) {
 	        throw new CustomException(ErrorCode.FILE_REMOVE_COMMENT);
