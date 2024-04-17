@@ -78,8 +78,10 @@ public class AuthenticationService {
 	 * @return 저장된 RefreshToken 객체
 	 */
 	private RefreshToken saveRefreshToken(TokenDto tokenDto, UserEntity userEntity) {
-		RefreshToken newRefreshToken = RefreshToken.builder().value(tokenDto.getRefreshToken()).userEntity(userEntity)
-				.build();
+		RefreshToken newRefreshToken = RefreshToken.builder()
+												   .value(tokenDto.getRefreshToken())
+												   .userEntity(userEntity)
+												   .build();
 		refreshTokenService.save(newRefreshToken);
 		return newRefreshToken;
 	}
@@ -132,16 +134,14 @@ public class AuthenticationService {
 		UserEntity userEntity = userRepository.findByUserId(userId)
 				.orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND_INFO));
 
-		UserInfo userInfo = UserInfo.builder().userId(userEntity.getUserId()).email(userEntity.getEmail())
-				.company(userEntity.getCompany())
-				.apiToken(userEntity.getApiTokenEntity() != null ? userEntity.getApiTokenEntity().getApiToken() : null)
-				.issuanceTime(userEntity.getApiTokenEntity() != null ? userEntity.getApiTokenEntity().getIssuanceTime()
-						: null)
-				.tokenExpiresIn(
-						userEntity.getApiTokenEntity() != null ? userEntity.getApiTokenEntity().getTokenExpiresIn()
-								: null)
-//								.projectBuildHistory(projectBuildHistoryDtos)
-				.build();
+		UserInfo userInfo = UserInfo.builder()
+									.userId(userEntity.getUserId())
+									.email(userEntity.getEmail())
+									.company(userEntity.getCompany())
+									.apiToken(userEntity.getApiTokenEntity() != null ? userEntity.getApiTokenEntity().getApiToken() : null)
+									.issuanceTime(userEntity.getApiTokenEntity() != null ? userEntity.getApiTokenEntity().getIssuanceTime() : null)
+									.tokenExpiresIn(userEntity.getApiTokenEntity() != null ? userEntity.getApiTokenEntity().getTokenExpiresIn() : null)
+									.build();
 		return userInfo;
 	}
 
@@ -160,7 +160,9 @@ public class AuthenticationService {
 		String username = authentication.getName();
 		Optional<UserEntity> userEntity = userRepository.findByUserId(username);
 		if (userEntity.isPresent()) {
-			refreshTokenService.deleteByValue(userEntity.get().getRefreshToken().getValue());
+			refreshTokenService.deleteByValue(userEntity.get()
+														.getRefreshToken()
+														.getValue());
 		}
 	}
 
@@ -180,9 +182,12 @@ public class AuthenticationService {
 
 	// ProjectBuildHistory를 ProjectBuildHistoryDto로 변환하는 메소드
 	private ProjectBuildHistoryDto convertToDto(ProjectBuildHistory projectBuildHistory) {
-		return ProjectBuildHistoryDto.builder().id(projectBuildHistory.getId())
-				.projectName(projectBuildHistory.getProjectName()).buildTime(projectBuildHistory.getBuildTime())
-				.status(projectBuildHistory.isStatus()).build();
+		return ProjectBuildHistoryDto.builder()
+									 .id(projectBuildHistory.getId())
+									 .projectName(projectBuildHistory.getProjectName())
+									 .buildTime(projectBuildHistory.getBuildTime())
+									 .status(projectBuildHistory.isStatus())
+									 .build();
 	}
 
 	private String getUsernameFromSecurityContext() {

@@ -63,8 +63,7 @@ public class ApiCreateController {
             return ResponseEntity.internalServerError().build();
         }
         
-        return ResponseEntity.ok()
-			                 .body(new UserResDto(data));
+        return ResponseEntity.ok().body(new UserResDto(data));
     }
 
 	private UserEntity getUserById(String userId) {
@@ -86,9 +85,12 @@ public class ApiCreateController {
 	private ApiIssuance generateAndSaveToken(UserEntity userEntity) {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		ApiIssuance apiIssuance = tokenProvider.apigenerateToken(authentication);
-		ApiTokenEntity apiTokenEntity = ApiTokenEntity.builder().apiToken(apiIssuance.getApiToken())
-				.userEntity(userEntity).issuanceTime(LocalDate.now()).tokenExpiresIn(apiIssuance.getTokenExpiresIn())
-				.build();
+		ApiTokenEntity apiTokenEntity = ApiTokenEntity.builder()
+													  .apiToken(apiIssuance.getApiToken())
+													  .userEntity(userEntity)
+													  .issuanceTime(LocalDate.now())
+													  .tokenExpiresIn(apiIssuance.getTokenExpiresIn())
+													  .build();
 		apiTokenRepository.save(apiTokenEntity);
 		return apiIssuance;
 	}

@@ -27,7 +27,11 @@ public class AdminController {
 		List<UserEntity> list = adminService.users();
 		List<User> users = new ArrayList<>();
 		for(UserEntity user : list) {
-			users.add(User.builder().userId(user.getUserId()).email(user.getEmail()).company(user.getEmail()).build());
+			users.add(User.builder()
+						  .userId(user.getUserId())
+						  .email(user.getEmail())
+						  .company(user.getEmail())
+						  .build());
 		}
 		return ResponseEntity.ok().body(new UserResDto(users));
 	}

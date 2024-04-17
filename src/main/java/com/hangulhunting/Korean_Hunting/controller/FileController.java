@@ -33,7 +33,7 @@ public class FileController {
 	
     @PostMapping("/upload")
     public ResponseEntity<ZipFile> fileUpload(@RequestParam("file") MultipartFile file,
-                                                  @RequestParam("extractionStrategyType") ExtractionStrategyType extractionStrategyType) {
+                                              @RequestParam("extractionStrategyType") ExtractionStrategyType extractionStrategyType) {
         try {
             ZipFile zipFile = fileService.searchInFileAsync(file, extractionStrategyType).get();
             return ResponseEntity.ok(zipFile);
@@ -42,4 +42,8 @@ public class FileController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+	
+
+
+
 }

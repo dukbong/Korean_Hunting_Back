@@ -22,16 +22,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CustomException.class)
     protected ResponseEntity<ErrorResponse> handleCustomException(CustomException e) {
-//        ErrorCode errorCode = e.getErrorCode();
-        
         return ResponseEntity.status(e.getHttpStatus())
                 .body(new ErrorResponse(e.getMessage(), e.toString()));
     }
-    
-//    @ExceptionHandler(MaxUploadSizeExceededException.class)
-//    public ResponseEntity<String> handleMaxSizeException(MaxUploadSizeExceededException exc) {
-//        return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED)
-//            .body("최대 허용 크기는 200MB입니다.");
-//    }
 
 }

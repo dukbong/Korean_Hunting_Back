@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @Slf4j
 @RequiredArgsConstructor
-public class BasicController {
+public class UserController {
 
 	private final RegisterUserService userService;
 	private final AuthenticationService authenticationService;
@@ -55,7 +55,10 @@ public class BasicController {
     	String loginResult = authenticationService.loginProcess(githubUser);
         HttpHeaders header = new HttpHeaders();
         header.add(TokenETC.AUTHORIZATION, TokenETC.PREFIX + loginResult);
-        return ResponseEntity.ok().headers(header).body(GitHub.builder().message("GitHub Login Success").userId(githubUser.getUserId()).build());
+        return ResponseEntity.ok().headers(header).body(GitHub.builder()
+        													  .message("GitHub Login Success")
+        													  .userId(githubUser.getUserId())
+        													  .build());
     }
 
 	@GetMapping("/logout")	
@@ -78,7 +81,6 @@ public class BasicController {
 	@GetMapping("/buildHistory")
 	public ResponseEntity<Page<ProjectBuildHistoryDto>> buildHistory(Pageable pageable){
 		Page<ProjectBuildHistoryDto> projectBuildHistoryInfo = authenticationService.buildHistory(pageable);
-//		return ResponseEntity.ok().header("X-Total-Pages", String.valueOf(projectBuildHistoryInfo.getTotalPage())).body(projectBuildHistoryInfo.getProjectBuildHistorys());
 		return ResponseEntity.ok().body(projectBuildHistoryInfo);
 	}
 

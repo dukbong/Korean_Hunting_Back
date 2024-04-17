@@ -35,30 +35,22 @@ public class CommentRemover {
 		commentPattern.put(".py", Pattern.compile("#.*|(?s)\"\"\".*?\"\"\"|(?s)'''.*?'''"));
 	}
 	
-	public String removeComments(InputStream zipInputStream, String fileType) {
-	    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-	         BufferedInputStream bufferedInputStream = new BufferedInputStream(zipInputStream)) {
-	        byte[] buffer = new byte[4096]; // 버퍼 크기를 조정하여 성능 향상
-	        int bytesRead;
-	        while ((bytesRead = bufferedInputStream.read(buffer)) != -1) {
-	            outputStream.write(buffer, 0, bytesRead);
-	        }
-	        String fileContent = outputStream.toString(StandardCharsets.UTF_8);
-	        Pattern pattern = commentPattern.get(fileType);
-	        Matcher matcher = pattern.matcher(fileContent);
+	public String removeComments(byte[] contentWithoutCommentsBytes, String fileType) {
+		// 데이터 크기가 4KB ~ 40KB 사이 일것으로 예상 되므로 Stream을 사용하지 않음
+	    String fileContent = new String(contentWithoutCommentsBytes, StandardCharsets.UTF_8);
+	    Pattern pattern = commentPattern.get(fileType);
+	    Matcher matcher = pattern.matcher(fileContent);
 
-	        StringBuffer result = new StringBuffer(); // Matcher의 appendReplacement 및 appendTail을 사용하기 위한 StringBuffer
+	    StringBuilder result = new StringBuilder();
 
-	        int lastEnd = 0;
-	        while (matcher.find()) {
-	            result.append(fileContent, lastEnd, matcher.start());
-	            lastEnd = matcher.end();
-	        }
-	        result.append(fileContent, lastEnd, fileContent.length());
-	        return result.toString();
-	    } catch (IOException e) {
-	        throw new CustomException(ErrorCode.FILE_REMOVE_COMMENT);
+	    int lastEnd = 0;
+	    while (matcher.find()) {
+	        result.append(fileContent, lastEnd, matcher.start());
+	        lastEnd = matcher.end();
 	    }
+	    result.append(fileContent, lastEnd, fileContent.length());
+	    return result.toString();
 	}
+
 
 }

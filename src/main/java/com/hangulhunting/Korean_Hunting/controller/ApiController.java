@@ -42,10 +42,21 @@ public class ApiController {
 		try {
 			zipFile = fileService.searchInFile(file, ExtractionStrategyType.EXTRACTION_KOREAN);
 			String username = getUsernameFromSecurityContext();
-			findUser = userRepository.findByUserId(username).orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND_BY_ID));
-			projectBuild = ProjectBuildHistory.builder().projectName(projectName).buildTime(LocalDateTime.now()).status(true).userEntity(findUser).build();
+			findUser = userRepository.findByUserId(username)
+									 .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND_BY_ID));
+			projectBuild = ProjectBuildHistory.builder()
+											  .projectName(projectName)
+											  .buildTime(LocalDateTime.now())
+											  .status(true)
+											  .userEntity(findUser)
+											  .build();
 		} catch (Exception e) {
-			projectBuild = ProjectBuildHistory.builder().projectName(projectName).buildTime(LocalDateTime.now()).status(false).userEntity(findUser).build();
+			projectBuild = ProjectBuildHistory.builder()
+											  .projectName(projectName)
+											  .buildTime(LocalDateTime.now())
+											  .status(false)
+											  .userEntity(findUser)
+											  .build();
 		} finally {
 			projectBuildHistoryService.projectBuild(projectBuild);
 			findUser.addProjectBuildHistory(projectBuild);

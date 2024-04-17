@@ -105,7 +105,11 @@ public class TokenProvider {
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	    String tokenExpiresInString = dateFormat.format(tokenExpiresIn);
 	    
-		return ApiIssuance.builder().apiToken(apiToken).issuanceTime(LocalDate.now()).tokenExpiresIn(tokenExpiresInString).build();
+		return ApiIssuance.builder()
+						  .apiToken(apiToken)
+						  .issuanceTime(LocalDate.now())
+						  .tokenExpiresIn(tokenExpiresInString)
+						  .build();
 	}
 	
 	
