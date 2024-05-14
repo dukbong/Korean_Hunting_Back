@@ -1,3 +1,26 @@
+#### 문제점 인식과 동기
+이 프로젝트는 회사에서 배포 시 소스 코드에서 한글의 존재 여부를 확인하는 번거로운 작업에서 시작되었습니다.
+직원들이 이 작업을 수행하는 데 많은 시간이 소비되고 있음을 관찰하였고, 이를 직접 경험하여 너무 많은 시간이 소요된다는 것을 확인하였습니다.
+이에 따라, 이러한 문제를 해결하기 위해 간단한 방법으로 소스 코드에서 원하는 문자열을 추출하는 프로세스를 자동화하고자 시작하게 되었습니다.
+더 나아가, 빌드 시에 원하는 문자열을 확인하고 빌드를 진행할지 여부를 선택할 수 있는 기능을 추가하여 직원들이 시간을 절약하고 더 효율적으로 작업할 수 있도록 하였습니다.
+이 프로젝트는 직원들의 업무 효율성을 향상시키고, 자동화된 프로세스를 통해 작업 속도를 높이는 것을 목표로 합니다.
+
+#### 성능 테스트 기록
+[링크](https://jangto.tistory.com/category/SourceCode.io%20%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8)에서 성능 테스트에 대한 자세한 기록을 확인할 수 있습니다.
+
+#### 기술 스택
+- 백엔드: Spring Boot, JPA
+- 프론트엔드: [React](https://github.com/dukbong/Korean_Hunting_Front)
+- 컨테이너화: Docker
+- 웹 서버: Nginx
+- 인증 및 보안: JWT
+- 모니터링: Actuator, Prometheus
+- 데이터베이스: MySQL
+- 성능 분석: JMH
+- 부하 테스트: JMeter
+
+---
+
 # Source Code Analysis Service
 
 This website provides a service to find specific parts in the source code (e.g., Korean characters, text within HTML tags) and notify users. Additionally, it offers a service to customize Gradle and Maven builds to check for the presence of Korean characters before building.
