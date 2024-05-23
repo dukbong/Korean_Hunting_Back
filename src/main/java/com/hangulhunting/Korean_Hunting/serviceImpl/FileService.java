@@ -97,6 +97,7 @@ public class FileService {
 				    e.printStackTrace();
 				}
 				
+// file io bount not use thread pool
 				ExtractionStrategy extractionStrategy = extractionStrategyProvider.setExtractionStrategy(extractionStrategyType);
 				Set<String> words = extractionStrategy.extract(contentWithoutComments);
 				
