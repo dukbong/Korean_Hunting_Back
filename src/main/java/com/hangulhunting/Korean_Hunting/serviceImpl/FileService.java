@@ -43,6 +43,7 @@ public class FileService {
     private final ExecutorService executorService = Executors.newFixedThreadPool(10);
     private static final ObjectMapper mapper = new ObjectMapper();
     
+// I/O bound ->>>>>>>>>> Thread pool cancel
     @Async
     public CompletableFuture<ZipFile> searchInFileAsync(MultipartFile file, ExtractionStrategyType extractionStrategyType) {
         return CompletableFuture.supplyAsync(() -> searchInFile(file, extractionStrategyType), executorService);
